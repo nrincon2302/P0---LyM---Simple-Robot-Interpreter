@@ -5,24 +5,23 @@ def abrir_archivo(nombre_archivo):
         with open(nombre_archivo, 'r') as archivo:
             contenido = archivo.read()
         return contenido
-    except:
-        print(f"Ocurrió un error al intentar abrir el archvo: {e}")
+    except Exception as e:
+        print(f"Ocurrió un error al intentar abrir el archivo: {e}")
         return None
 
-def tokenizador(nombreArchivo):
+def tokenizador(nombre_archivo):
     try:
-        with open(nombreArchivo, 'r') as archivo:
+        with open(nombre_archivo, 'r') as archivo:
             contenido = archivo.read()
-            tokens = re.findall(r'\S|\w', contenido)
+            tokens = re.findall(r'\b\w+\b|\S', contenido)
             return tokens
-    except:
-        print(f"Ocurrió un error al intentar  abrir el archivo: {e}")
+    except Exception as e:
+        print(f"Ocurrió un error al intentar abrir el archivo: {e}")
         return None
 
-nombreArchivo = 'prueba.txt'
-tokens = tokenizador(nombreArchivo)
+nombre_archivo = 'prueba.txt'
+tokens = tokenizador(nombre_archivo)
 if tokens:
     print(tokens)
 else:
     print("Hubo problemas al tokenizar el archivo")
- 
