@@ -1,5 +1,17 @@
+from logic import parse
 import re
 
+def app():
+    print("\n____________Analizador sintáctico____________")
+    #nombre_archivo=input("Ingrese el nombre del archivo: ")
+    contenido = abrir_archivo("prueba.txt")
+    tokens = tokenizador(contenido)
+    
+    print(tokens)
+    
+    parse(tokens)
+
+#Funcion para abrir un archivo en formato txt
 def abrir_archivo(nombre_archivo):
     try:
         with open(nombre_archivo, 'r') as archivo:
@@ -8,26 +20,11 @@ def abrir_archivo(nombre_archivo):
     except Exception as e:
         print(f"Ocurrió un error al intentar abrir el archivo: {e}")
         return None
+    
+#funcion para tokenizar el lenguaje del archivo
+def tokenizador(contenido):
+    # Tokenizar, incluyendo palabras específicas y paréntesis como tokens individuales
+    tokens = re.findall(r'(can-put\?|can-pick\?|can-move\?|move-dir|move-face|run-dirs|\b\w+\b|[()])', contenido)
+    return tokens
 
-def tokenizador(nombre_archivo):
-    try:
-        with open(nombre_archivo, 'r') as archivo:
-            contenido = archivo.read()
-
-
-            contenido = re.sub(r'(can-put\?|can-pick\?|can-move\?|move-dir|move-face|run-dirs)', r'\1', contenido)
-
-       
-            tokens = re.findall(r'\b\w+\b|\S+(?:-\S+)*|\S+\?', contenido)
-            
-            return tokens
-    except Exception as e:
-        print(f"Ocurrió un error al intentar abrir el archivo: {e}")
-        return None
-
-nombre_archivo = 'prueba.txt'
-tokens = tokenizador(nombre_archivo)
-if tokens:
-    print(tokens)
-else:
-    print("Hubo problemas al tokenizar el archivo")
+app()

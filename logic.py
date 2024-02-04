@@ -5,16 +5,13 @@ constantes = ["Dim", "myXpos", "myYpos", "myChips", "myBalloons", "balloonsHere"
 control = ["if", "loop", "repeat", "facing", "blocked", "can-put", "can-pick", "can-move", "isZero", "not", "defun"]
 
 
-def init(tokens: list) -> None:
-    resultado = parse(tokens)
-    if resultado:
-        print("Las intrucciones son correctas")
-    else:
-        print("Las instrucciones no son correctas")
-
-
 def parse(lexer_result):
     # Crear funcion para iniciar a analizar la sintaxis y usar las funciones de acuerdo al token identificado
+    
+    #Se comprueba que la cantidad de signos ( y ) sea consistente
+    
+    contar_parentesis(lexer_result)
+    
     tokens = lexer_result.copy()
     instrucciones = []
     correctamente = []
@@ -75,3 +72,10 @@ def parse_control(instruccion):
 def parse_funciones(instruccion):
     # verificar las funciones
     return None
+
+def contar_parentesis(tokens):
+    parentesisIniciales = sum(1 for token in tokens if token == '(')
+    parentesisFinales = sum(1 for token in tokens if token == ')')
+    if parentesisIniciales != parentesisFinales:
+        raise Exception("La cantidad de paréntesis abiertos y cerrados no coincide.")
+
