@@ -77,7 +77,7 @@ def parse_comando(instruccion):
     # Verificar si es una instrucción "defvar"
     elif instruccion[1] == "defvar":
         # Verificar si la instrucción tiene el formato correcto
-        if len(instruccion) == 5 and instruccion[2].isidentifier() and instruccion[3].isdigit() and instruccion[2] not in tabla_simbolos.keys():
+        if len(instruccion) == 5 and instruccion[2].isidentifier() and instruccion[3].isdigit() and instruccion[2] not in tabla_simbolos.keys() and instruccion[2] not in constantes:
             nombre_variable = instruccion[2]
             valor_inicial = int(instruccion[3])
             #agregar el nuevo valor a la tabla de simbolos

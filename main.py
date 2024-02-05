@@ -2,9 +2,20 @@ from logic import parse
 import re
 
 def app():
-    print("\n____________Analizador sintáctico____________")
+
+
+    print("\n*********************************************")
+    print("*                                           *")
+    print("*          Bienvenido al Analizador         *")
+    print("*               Sintáctico                  *")
+    print("*                                           *")
+    print("*          Hecho por Carol Florido          *")
+    print("*              y Nicolás Sánchez            *")
+    print("*                                           *")
+    print("*********************************************\n")
+    
     #nombre_archivo=input("Ingrese el nombre del archivo: ")
-    contenido = abrir_archivo("miniTest.txt")
+    contenido = abrir_archivo("prueba.txt")
     tokens = tokenizador(contenido)
     print(tokens)
     parse(tokens)
