@@ -7,8 +7,6 @@ def app():
     contenido = abrir_archivo("prueba.txt")
     tokens = tokenizador(contenido)
     
-    print(tokens)
-    
     parse(tokens)
 
 #Funcion para abrir un archivo en formato txt

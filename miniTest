@@ -1,0 +1,3 @@
+(run-dirs :left :up :left :down :right)
+(defvar tree 3)
+(null)

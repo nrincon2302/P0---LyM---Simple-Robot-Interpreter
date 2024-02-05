@@ -1,4 +1,5 @@
-(defvar rotate 3)
+(defvar tree 3)
+(defvar tree 3 er)
 (if (can-move? :north) (move-dir 1 :north) (null))
 (
 (if (not (blocked?)) (move 1) (null))

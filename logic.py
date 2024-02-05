@@ -2,9 +2,15 @@
 caracteres_reservados = ["(",")",":","-"]
 comandos = ["defvar", "=", "move", "skip", "turn", "face", "put", "pick", "move-dir", "run-dirs", "move-face", "null"]
 constantes = ["Dim", "myXpos", "myYpos", "myChips", "myBalloons", "balloonsHere", "ChipsHere", "Spaces"]
-control = ["if", "loop", "repeat", "facing", "blocked", "can-put", "can-pick", "can-move", "isZero", "not", "defun"]
+control = ["if", "loop", "repeat", "facing", "blocked", "can-put?", "can-pick?", "can-move?", "isZero", "not", "defun"]
 
+#Tabla de simbolos para guardar las variables creadas por el usuario
+tabla_simbolos = {}
 
+#Agrego las contantes a mi tabla de simbolos para verificarlas al tiempo con las variables del usuario
+for constante in constantes:
+    tabla_simbolos[constante] = None
+    
 def parse(lexer_result):
     # Crear funcion para iniciar a analizar la sintaxis y usar las funciones de acuerdo al token identificado
     
@@ -63,6 +69,56 @@ def parse(lexer_result):
     
 def parse_comando(instruccion):
     # verificar los comando pasa moverse derecha, izquierda, etc
+    principal=instruccion[3]
+    
+    #verificar el uso de null
+    if instruccion[1] == "null" and len(instruccion)==3:
+        return True
+    
+    # Verificar si es una instrucción "defvar"
+    elif instruccion[1] == "defvar":
+        # Verificar si la instrucción tiene el formato correcto
+        if len(instruccion) == 5 and instruccion[2].isidentifier() and instruccion[3].isdigit() and instruccion[2] not in tabla_simbolos.keys():
+            nombre_variable = instruccion[2]
+            valor_inicial = int(instruccion[3])
+            #agregar el nuevo valor a la tabla de simbolos
+            tabla_simbolos[nombre_variable]=valor_inicial  
+            return True
+    
+    #verificar el uso correcto de la reasignacion de valores
+    elif instruccion[1] == "=":
+        if len(instruccion) == 5  and instruccion[3].isdigit() and instruccion[2] in tabla_simbolos.keys():
+            tabla_simbolos[instruccion[2]]=int(instruccion[3])
+            return True
+    
+    #verificar el uso correcto de las direcciones
+    elif instruccion[1] in ["move", "skip", "turn", "face"]:
+            if len(instruccion) == 4 and (instruccion[2].isdigit() or instruccion[2] in tabla_simbolos.keys()):
+                return True
+    #verificar el uso correcto del put y el pick
+    elif instruccion[1] in ["put", "pick"]:
+        if len(instruccion) == 4 and instruccion[2] in [":balloons", ":chips"]:
+           if instruccion[3].isdigit() or instruccion[3]in tabla_simbolos.keys():
+                    return True
+        
+    #verificar el uso correcto del move, run, move
+    elif instruccion[1] in ["move-dir", "run-dirs", "move-face"] and len(instruccion) != 4:
+
+        if instruccion[1] == "move-dir":
+            if instruccion[2].isdigit() and instruccion[3] in [":front", ":right", ":left", ":back"]:
+
+                return True
+        elif instruccion[1] == "run-dirs":
+            if isinstance(instruccion[3], list) and all(dir in [":front", ":right", ":left", ":back"] for dir in instruccion[3]):
+
+                return True
+        elif instruccion[1] == "move-face":
+            if instruccion[2].isdigit() and instruccion[3] in [":north", ":south", ":west", ":east"]:
+
+                return True
+    
+    #En caso de que no cumpla ninguno de estos casos se lanza la excepcion
+    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada")
     return None
 
 def parse_control(instruccion):
@@ -72,6 +128,8 @@ def parse_control(instruccion):
 def parse_funciones(instruccion):
     # verificar las funciones
     return None
+
+
 
 def contar_parentesis(tokens):
     parentesisIniciales = sum(1 for token in tokens if token == '(')
