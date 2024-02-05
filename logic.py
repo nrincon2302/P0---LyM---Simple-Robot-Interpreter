@@ -69,8 +69,7 @@ def parse(lexer_result):
     
 def parse_comando(instruccion):
     # verificar los comando pasa moverse derecha, izquierda, etc
-    principal=instruccion[3]
-    
+
     #verificar el uso de null
     if instruccion[1] == "null" and len(instruccion)==3:
         return True
@@ -109,9 +108,13 @@ def parse_comando(instruccion):
 
                 return True
         elif instruccion[1] == "run-dirs":
-            if isinstance(instruccion[3], list) and all(dir in [":front", ":right", ":left", ":back"] for dir in instruccion[3]):
-
-                return True
+            if len(instruccion) >= 4 and instruccion[-1] == ')':
+                # Extraemos solo las direcciones de la lista de instrucción, excluyendo los paréntesis
+                direcciones = instruccion[2:-1]
+                # Verificamos que todas las direcciones sean válidas
+                if all(dir in [":front", ":right", ":left", ":back",":up", ":down"] for dir in direcciones):
+                    return True
+        
         elif instruccion[1] == "move-face":
             if instruccion[2].isdigit() and instruccion[3] in [":north", ":south", ":west", ":east"]:
 

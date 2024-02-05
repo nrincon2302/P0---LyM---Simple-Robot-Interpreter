@@ -1,0 +1,1 @@
+(run-dirs :left :up :left :down :right)

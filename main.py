@@ -4,9 +4,9 @@ import re
 def app():
     print("\n____________Analizador sintáctico____________")
     #nombre_archivo=input("Ingrese el nombre del archivo: ")
-    contenido = abrir_archivo("prueba.txt")
+    contenido = abrir_archivo("miniTest.txt")
     tokens = tokenizador(contenido)
-    
+    print(tokens)
     parse(tokens)
 
 #Funcion para abrir un archivo en formato txt
@@ -22,7 +22,7 @@ def abrir_archivo(nombre_archivo):
 #funcion para tokenizar el lenguaje del archivo
 def tokenizador(contenido):
     # Tokenizar, incluyendo palabras específicas y paréntesis como tokens individuales
-    tokens = re.findall(r'(can-put\?|can-pick\?|can-move\?|move-dir|move-face|run-dirs|\b\w+\b|[()])', contenido)
+    tokens = re.findall(r'(can-put\?|can-pick\?|can-move\?|move-dir|move-face|run-dirs|:\w+|\b\w+\b|[()])', contenido)
     return tokens
 
 app()
