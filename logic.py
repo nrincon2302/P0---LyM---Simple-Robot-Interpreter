@@ -142,7 +142,7 @@ def parse_funciones(instruccion):
     # verificar las funciones
     
     #verifica si la funcion no existe 
-    if instruccion[2] not in funcionesNumParametros.keys():
+    if instruccion[2] not in funcionesNumParametros.keys() and instruccion[3]=="(":
         instruccion_copia = copy.deepcopy(instruccion[3:])
         parametros = []
         x=0
@@ -192,10 +192,8 @@ def parse_funciones(instruccion):
         funcionesNumParametros[instruccion[2]] = parametros
         
         #Hacer el caso donde la funcion ya existe
-        
-        
         return True
-            
+    
             
         
     return None

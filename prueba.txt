@@ -1,11 +1,11 @@
-(defvar rotate 3)
+(defvAr rotate 3)
 (if (can-move? :north) (move-dir 1 :north) (null))
 (
 (if (not (blocked?)) (move 1) (null))
 (turn :left)
 )
 (defvar one 1)
-(defun foo (c p)
+(defun foo s(c p)
   (put :chips c)
   (put :balloons p)
   (move rotate)
