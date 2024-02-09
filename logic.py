@@ -223,7 +223,9 @@ def parse_condition(instruccion):
     elif instruccion[1] == "isZero?" and len(instruccion) == 4:
         if instruccion[2].isdigit():
             return True
-        
+    
+    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada")
+   
     return False
 
 
