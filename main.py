@@ -32,6 +32,9 @@ def abrir_archivo(nombre_archivo):
     
 #funcion para tokenizar el lenguaje del archivo
 def tokenizador(contenido):
+    # Convertir todo el contenido a minúsculas
+    contenido = contenido.lower()
+    
     # Tokenizar, incluyendo palabras específicas y paréntesis como tokens individuales
     tokens = re.findall(r'(can-put\?|can-pick\?|can-move\?|move-dir|move-face|run-dirs|:\w+|\b\w+\b|[()])', contenido)
     return tokens
