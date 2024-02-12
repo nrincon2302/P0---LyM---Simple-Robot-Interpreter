@@ -5,7 +5,7 @@
 (turn :left)
 )
 (defvar one 1)
-(defun foo s(c p)
+(defun foo (c p)
   (put :chips c)
   (put :balloons p)
   (move rotate)

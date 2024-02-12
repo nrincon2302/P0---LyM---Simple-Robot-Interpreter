@@ -64,16 +64,16 @@ def parse(lexer_result):
             # Verificar si el cuerpo principal es un comando, una función o un bloque de control
             # Hacer el parseo correspondiente y agregar el resultado a la lista de verificación
             parametros=[]
-            if principal in comandos:
-                correctamente.append(parse_comando(fragmento_logico, parametros))
-            elif principal in control:
-                correctamente.append(parse_control(fragmento_logico))
-            else:
-                correctamente.append(parse_funciones(fragmento_logico))
+            #if principal in comandos:
+            #    correctamente.append(parse_comando(fragmento_logico, parametros))
+            #elif principal in control:
+            #    correctamente.append(parse_control(fragmento_logico))
+            #else:
+            #    correctamente.append(parse_funciones(fragmento_logico))
 
     # Estará bien escrito si no hay Falsos en la lista
     bien_escrito = False not in correctamente
-    return bien_escrito
+    return instrucciones
     
 def parse_comando(instruccion, parametros):
     # verificar los comando pasa moverse derecha, izquierda, etc
@@ -100,7 +100,7 @@ def parse_comando(instruccion, parametros):
     
     #verificar el uso correcto de las direcciones
     elif instruccion[1] in ["move", "skip", "turn", "face"]:
-            if len(instruccion) == 4 and (instruccion[2].isdigit() or instruccion[2] in tabla_simbolos.keys()) or instruccion[3]in parametros:
+            if len(instruccion) == 4 and (instruccion[2].isdigit() or instruccion[2] in tabla_simbolos.keys()) or instruccion[3] in parametros:
                 return True
     #verificar el uso correcto del put y el pick
     elif instruccion[1] in ["put", "pick"]:
@@ -133,8 +133,109 @@ def parse_comando(instruccion, parametros):
 
 def parse_control(instruccion):
     # verificar los comandos de control
+
+    # Si es una instrucción de definición de función, lo parsea como tal
     if instruccion[1] == "defun":
          parse_funciones(instruccion)
+    # Si es una instrucción de condicional
+    elif instruccion[1] == "if":
+        # Si sigue la estructura, el siguiente es un paréntesis y parsea la condición
+        if instruccion[2] == "(":
+            # Calcula la longitud esperada del condicional si es correcto
+            longitud_condicional = 0
+            if instruccion[3] == "facing?":
+                longitud_condicional = 4
+            elif instruccion[3] == "blocked?":
+                longitud_condicional = 3
+            elif instruccion[3] == "can-put?":
+                longitud_condicional = 5
+            elif instruccion[3] == "can-pick?":
+                longitud_condicional = 5
+            elif instruccion[3] == "can-move?":
+                longitud_condicional = 4
+            elif instruccion[3] == "isZero?":
+                longitud_condicional = 4
+            # Parsea el condicional específicamente
+            parse_condition(instruccion[2:2+longitud_condicional])
+            # Después del condicional, debe venir un comando o un bloque de control
+            b1 = ["("]
+            i = 2 + longitud_condicional + 1
+            contador_parentesis = 1
+            while contador_parentesis != 0:
+                b1.append(instruccion[i])
+                if instruccion[i] == "(":
+                    contador_parentesis += 1
+                if instruccion[i] == ")":
+                    contador_parentesis -= 1
+                i += 1
+            # Parsear el primer bloque que se ha separado
+            if b1[1] in comandos:
+                parse_comando(b1, [])
+            elif b1[1] in control:
+                parse_control(b1)
+            # Parsear el segundo bloque que se ha separado
+            b2 = [instruccion[j] for j in range(i,len(instruccion)-1)]
+            if b2[1] in comandos:
+                parse_comando(b2, [])
+            elif b2[1] in control:
+                parse_control(b2)
+                
+            return True
+        
+        # Si no arranca en paréntesis después del if, se detiene el programa. Está mal
+        else:
+            raise Exception("La instrucción es un condicional. Se esperaba una condición después del IF.")
+            
+    # Si es una instrucción de bucle loop
+    elif instruccion[1] == "loop":
+        # Si sigue la estructura, el siguiente es un paréntesis y parsea la condición
+        if instruccion[2] == "(":
+            # Calcula la longitud esperada del condicional si es correcto
+            longitud_condicional = 0
+            if instruccion[3] == "facing?":
+                longitud_condicional = 4
+            elif instruccion[3] == "blocked?":
+                longitud_condicional = 3
+            elif instruccion[3] == "can-put?":
+                longitud_condicional = 5
+            elif instruccion[3] == "can-pick?":
+                longitud_condicional = 5
+            elif instruccion[3] == "can-move?":
+                longitud_condicional = 4
+            elif instruccion[3] == "isZero?":
+                longitud_condicional = 4
+            # Parsea el condicional específicamente
+            parse_condition(instruccion[2:2+longitud_condicional])
+            # Después del condicional, debe venir un comando o un bloque de control
+            i = 2 + longitud_condicional
+            # Parsear el bloque que se ha separado
+            b = [instruccion[j] for j in range(i,len(instruccion)-1)]
+            if b[1] in comandos:
+                parse_comando(b, [])
+            elif b[1] in control:
+                parse_control(b)
+        
+            return True
+        # Si no arranca en paréntesis después del if, se detiene el programa. Está mal
+        else:
+            raise Exception("La instrucción es un bucle. Se esperaba una condición después del LOOP.")
+
+    # Si es una instrucción de repetición Repeat
+    elif instruccion[1] == "repeat":
+        # Si sigue la estructura, el siguiente es un número entero
+        if instruccion[2].isdigit():
+            # Le sigue ya sea un comando o un bloque de control
+            b = [instruccion[k] for k in range(3, len(instruccion)-1)]
+            # Parsear el bloque que se ha separado
+            if b[1] in comandos:
+                parse_comando(b, [])
+            elif b[1] in control:
+                parse_control(b)
+        
+            return True
+        # Si no le sigue un número está mal
+        else:
+            raise Exception("La instrucción es un repeat. Se esperaba un número entero después del REPEAT.")
 
     return None
 

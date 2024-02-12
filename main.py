@@ -10,15 +10,15 @@ def app():
     print("*               Sintáctico                  *")
     print("*                                           *")
     print("*          Hecho por Carol Florido          *")
-    print("*              y Nicolás Sánchez            *")
+    print("*              y Nicolás Rincón Sánchez     *")
     print("*                                           *")
     print("*********************************************\n")
     
     #nombre_archivo=input("Ingrese el nombre del archivo: ")
     contenido = abrir_archivo("prueba.txt")
     tokens = tokenizador(contenido)
-    print(tokens)
-    parse(tokens)
+    for i in parse(tokens):
+        print(i)
 
 #Funcion para abrir un archivo en formato txt
 def abrir_archivo(nombre_archivo):
