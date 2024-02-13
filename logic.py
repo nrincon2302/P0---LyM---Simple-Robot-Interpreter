@@ -4,8 +4,9 @@ import copy
 
 caracteres_reservados = ["(",")",":","-"]
 comandos = ["defvar", "=", "move", "skip", "turn", "face", "put", "pick", "move-dir", "run-dirs", "move-face", "null"]
+comandosfunciones = ["move", "skip", "turn", "face", "put", "pick", "move-dir", "run-dirs", "move-face", "null"]
 constantes = ["dim", "myxpos", "myypos", "mychips", "myballoons", "balloonshere", "chipshere", "spaces"]
-control = ["if", "loop", "repeat", "defun"]
+control = ["if", "loop", "repeat"]
 condition = ["facing?", "blocked?", "can-put?", "can-pick?", "can-move?", "iszero", "not"]
 
 #Tabla de simbolos para guardar las variables creadas por el usuario
@@ -64,12 +65,16 @@ def parse(lexer_result):
             # Verificar si el cuerpo principal es un comando, una función o un bloque de control
             # Hacer el parseo correspondiente y agregar el resultado a la lista de verificación
             parametros=[]
-            #if principal in comandos:
-            #    correctamente.append(parse_comando(fragmento_logico, parametros))
-            #elif principal in control:
-            #    correctamente.append(parse_control(fragmento_logico))
-            #else:
-            #    correctamente.append(parse_funciones(fragmento_logico))
+            if principal in comandos:
+                correctamente.append(parse_comando(fragmento_logico, parametros))
+            elif principal in control:
+                correctamente.append(parse_control(fragmento_logico, parametros))
+            elif principal == "defun":
+                parse_funciones(fragmento_logico)
+            elif principal in funcionesNumParametros:
+                parse_funciones(fragmento_logico)
+            else:
+                raise Exception(f"{fragmento_logico} no se reconoce este tipo de instrucción")  
 
     # Estará bien escrito si no hay Falsos en la lista
     bien_escrito = False not in correctamente
@@ -128,17 +133,16 @@ def parse_comando(instruccion, parametros):
                 return True
     
     #En caso de que no cumpla ninguno de estos casos se lanza la excepcion
-    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada")
+   # raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada")
     return None
 
-def parse_control(instruccion):
+def parse_control(instruccion, parametros):
     # verificar los comandos de control
-
+    comodin=0
     # Si es una instrucción de definición de función, lo parsea como tal
-    if instruccion[1] == "defun":
-         parse_funciones(instruccion)
+
     # Si es una instrucción de condicional
-    elif instruccion[1] == "if":
+    if instruccion[1] == "if":
         # Si sigue la estructura, el siguiente es un paréntesis y parsea la condición
         if instruccion[2] == "(":
             # Calcula la longitud esperada del condicional si es correcto
@@ -153,10 +157,34 @@ def parse_control(instruccion):
                 longitud_condicional = 5
             elif instruccion[3] == "can-move?":
                 longitud_condicional = 4
-            elif instruccion[3] == "isZero?":
+            elif instruccion[3] == "iszero?":
                 longitud_condicional = 4
+            
+            elif instruccion[3] == "not":
+                comodin=2
+        
+                if instruccion[5] == "facing?":
+                    longitud_condicional = 4
+                elif instruccion[5] == "blocked?":
+                    longitud_condicional = 3
+                elif instruccion[5] == "can-put?":
+                    longitud_condicional = 5
+                elif instruccion[5] == "can-pick?":
+                    longitud_condicional = 5
+                elif instruccion[5] == "can-move?":
+                    longitud_condicional = 4
+                elif instruccion[5] == "iszero?":
+                    longitud_condicional = 4
+                else:
+                    raise Exception(f"{instruccion[5]} no es valido como intrucción del condicional")
+            
+            else:
+                    raise Exception(f"{instruccion[3]} no es valido como intrucción del condicional")  
+                
             # Parsea el condicional específicamente
-            parse_condition(instruccion[2:2+longitud_condicional])
+            
+            parse_condition(instruccion[2+comodin:2+longitud_condicional+comodin], parametros)
+            
             # Después del condicional, debe venir un comando o un bloque de control
             b1 = ["("]
             i = 2 + longitud_condicional + 1
@@ -190,7 +218,7 @@ def parse_control(instruccion):
     elif instruccion[1] == "loop":
         # Si sigue la estructura, el siguiente es un paréntesis y parsea la condición
         if instruccion[2] == "(":
-            # Calcula la longitud esperada del condicional si es correcto
+                       # Calcula la longitud esperada del condicional si es correcto
             longitud_condicional = 0
             if instruccion[3] == "facing?":
                 longitud_condicional = 4
@@ -202,10 +230,33 @@ def parse_control(instruccion):
                 longitud_condicional = 5
             elif instruccion[3] == "can-move?":
                 longitud_condicional = 4
-            elif instruccion[3] == "isZero?":
+            elif instruccion[3] == "iszero?":
                 longitud_condicional = 4
+            elif instruccion[3] == "not":
+                comodin=2
+                
+        
+                if instruccion[5] == "facing?":
+                    longitud_condicional = 4
+                elif instruccion[5] == "blocked?":
+                    longitud_condicional = 3
+                elif instruccion[5] == "can-put?":
+                    longitud_condicional = 5
+                elif instruccion[5] == "can-pick?":
+                    longitud_condicional = 5
+                elif instruccion[5] == "can-move?":
+                    longitud_condicional = 4
+                elif instruccion[5] == "iszero?":
+                    longitud_condicional = 4
+                else:
+                    raise Exception(f"{instruccion[5]} no es valido como intrucción dentro del loop")
+            else:
+                    raise Exception(f"{instruccion[3]} no es valido como intrucción dentro del loop")
+            
+            parametros=[]
             # Parsea el condicional específicamente
-            parse_condition(instruccion[2:2+longitud_condicional])
+            parse_condition(instruccion[2+comodin:2+longitud_condicional+comodin], parametros)
+            
             # Después del condicional, debe venir un comando o un bloque de control
             i = 2 + longitud_condicional
             # Parsear el bloque que se ha separado
@@ -223,7 +274,7 @@ def parse_control(instruccion):
     # Si es una instrucción de repetición Repeat
     elif instruccion[1] == "repeat":
         # Si sigue la estructura, el siguiente es un número entero
-        if instruccion[2].isdigit():
+        if instruccion[2].isdigit() or instruccion[2]in tabla_simbolos.keys() or instruccion[2]in parametros:
             # Le sigue ya sea un comando o un bloque de control
             b = [instruccion[k] for k in range(3, len(instruccion)-1)]
             # Parsear el bloque que se ha separado
@@ -243,7 +294,7 @@ def parse_funciones(instruccion):
     # verificar las funciones
     
     #verifica si la funcion no existe 
-    if instruccion[2] not in funcionesNumParametros.keys() and instruccion[4]=="(":
+    if instruccion[2] not in funcionesNumParametros.keys() and instruccion[3]=="(":
         instruccion_copia = copy.deepcopy(instruccion[3:])
         parametros = []
         x=0
@@ -278,55 +329,78 @@ def parse_funciones(instruccion):
                         parentesis_abiertos += 1
                     if token == ")":
                         parentesis_abiertos -= 1
+                    
+
                     fragmento_logico.append(token)
         
                 # Hacer el parseo correspondiente y agregar el resultado a la lista de verificación
                 x+=1
+                
+                    
                 if x==1:
                     if any(isinstance(item, str) for item in fragmento_logico[1:-1]):
                         for item in fragmento_logico[1:-1]:
                              parametros.append(item)
+                             if instruccion[4]==")":
+                                 parametros=[]
                 elif x>1:
-                    parse_comando(fragmento_logico, parametros)
+                    if fragmento_logico[1] in comandosfunciones:
+                        parse_comando(fragmento_logico, parametros)
+                    if fragmento_logico[1] in control:
+                        parse_control(fragmento_logico, parametros)
             
         #Agregar la funcion a el diccionario
         funcionesNumParametros[instruccion[2]] = parametros
         
-        #Hacer el caso donde la funcion ya existe
+
+        
+        
         return True
     
+    #Hacer el caso donde la funcion ya existe
+    elif instruccion[1] in funcionesNumParametros.keys():
+        if len(instruccion) == 2+1+len(funcionesNumParametros[instruccion[1]]):
+            x=2
+            while instruccion[x]!=")":
+                
+                if not instruccion[x].isdigit() and instruccion[x] not in constantes:
+                        raise Exception(f"Los parametros de {' '.join(instruccion)} no son correctos")
+                x+=1
+            return True       
+                
             
-        
+    raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
+
     return None
 
-def parse_condition(instruccion):
+def parse_condition(instruccion, parametros):
     # verificar las condiciones que se usan en la estrucutra de control if
     
-    if instruccion[1] == "facing?" and len(instruccion) == 4:
+    if instruccion[1] == "facing?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
         if instruccion[2] == "north" or instruccion[2] == "south" or instruccion[2] == "east" or instruccion[2] == "west":
             return True
     
-    elif instruccion[1] == "blocked?" and len(instruccion) == 3:
+    elif instruccion[1] == "blocked?" and len(instruccion) == 3 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
         return True
     
     elif instruccion[1] == "can-put?" and len(instruccion) == 5:
-        if instruccion[2] in ["chips", "balloons"] and instruccion[3].isdigit():
+        if instruccion[2] in ["chips", "balloons"] and (instruccion[3].isdigit() or instruccion[3]in tabla_simbolos.keys() or instruccion[3]in parametros) and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
             return True
     
     elif instruccion[1] == "can-pick?" and len(instruccion) == 5:
-        if instruccion[2] in ["chips", "balloons"] and instruccion[3].isdigit():
+        if instruccion[2] in ["chips", "balloons"] and (instruccion[3].isdigit() or instruccion[3]in tabla_simbolos.keys() or instruccion[3]in parametros) and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
             return True
     
-    elif instruccion[1] == "can-move?" and len(instruccion) == 4:
+    elif instruccion[1] == "can-move?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
         if instruccion[2] in [":north", ":south", ":east", ":west"]:
             return True
     
-    elif instruccion[1] == "isZero?" and len(instruccion) == 4:
-        if instruccion[2].isdigit():
+    elif instruccion[1] == "iszero?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
+        if instruccion[2].isdigit() or instruccion[2]in tabla_simbolos.keys() or instruccion[2]in parametros:
             return True
     
-    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada")
-   
+    raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
+
     return False
 
 
