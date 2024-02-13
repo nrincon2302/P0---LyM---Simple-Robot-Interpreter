@@ -133,7 +133,7 @@ def parse_comando(instruccion, parametros):
                 return True
     
     #En caso de que no cumpla ninguno de estos casos se lanza la excepcion
-   # raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada")
+    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada")
     return None
 
 def parse_control(instruccion, parametros):
