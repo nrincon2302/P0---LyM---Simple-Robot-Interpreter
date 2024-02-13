@@ -138,6 +138,7 @@ def parse_comando(instruccion, parametros):
 
 def parse_control(instruccion, parametros):
     # verificar los comandos de control
+    
     comodin=0
     # Si es una instrucción de definición de función, lo parsea como tal
 
@@ -186,6 +187,7 @@ def parse_control(instruccion, parametros):
             parse_condition(instruccion[2+comodin:2+longitud_condicional+comodin], parametros)
             
             # Después del condicional, debe venir un comando o un bloque de control
+        
             b1 = ["("]
             i = 2 + longitud_condicional + 1
             contador_parentesis = 1
@@ -200,13 +202,13 @@ def parse_control(instruccion, parametros):
             if b1[1] in comandos:
                 parse_comando(b1, [])
             elif b1[1] in control:
-                parse_control(b1)
+                parse_control(b1, [])
             # Parsear el segundo bloque que se ha separado
             b2 = [instruccion[j] for j in range(i,len(instruccion)-1)]
             if b2[1] in comandos:
                 parse_comando(b2, [])
             elif b2[1] in control:
-                parse_control(b2)
+                parse_control(b2, [])
                 
             return True
         
@@ -264,7 +266,7 @@ def parse_control(instruccion, parametros):
             if b[1] in comandos:
                 parse_comando(b, [])
             elif b[1] in control:
-                parse_control(b)
+                parse_control(b, parametros)
         
             return True
         # Si no arranca en paréntesis después del if, se detiene el programa. Está mal
@@ -281,7 +283,7 @@ def parse_control(instruccion, parametros):
             if b[1] in comandos:
                 parse_comando(b, [])
             elif b[1] in control:
-                parse_control(b)
+                parse_control(b, parametros)
         
             return True
         # Si no le sigue un número está mal
