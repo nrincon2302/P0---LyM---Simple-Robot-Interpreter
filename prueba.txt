@@ -1,5 +1,5 @@
 (defvAr rotate 3)
-(if (can-move? :north) (move-dir 1 :north) (null))
+(if (can-move? :north) (move-dir 1 :front) (null))
 (
 (if (not (blocked?)) (move 1) (null))
 (turn :left)

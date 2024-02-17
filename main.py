@@ -2,23 +2,27 @@ from logic import parse
 import re
 
 def app():
-
-
     print("\n*********************************************")
     print("*                                           *")
     print("*          Bienvenido al Analizador         *")
     print("*               Sintáctico                  *")
     print("*                                           *")
     print("*          Hecho por Carol Florido          *")
-    print("*              y Nicolás Rincón Sánchez     *")
+    print("*              y Nicolás Rincón             *")
     print("*                                           *")
     print("*********************************************\n")
     
-    #nombre_archivo=input("Ingrese el nombre del archivo: ")
-    contenido = abrir_archivo("prueba.txt")
+    nombre_archivo=input("Ingrese el nombre del archivo: ")
+    contenido = abrir_archivo(nombre_archivo)
     tokens = tokenizador(contenido)
-    for i in parse(tokens):
-        print(i)
+    try:
+        if parse(tokens):
+            print("El programa se encuentra correctamente escrito.")
+        else:
+            print("El programa no se encuentra correctamente escrito.")
+    except Exception as e:
+        print("El programa no se encuentra correctamente escrito.")
+        print(str(e))
 
 #Funcion para abrir un archivo en formato txt
 def abrir_archivo(nombre_archivo):
@@ -36,7 +40,7 @@ def tokenizador(contenido):
     contenido = contenido.lower()
     
     # Tokenizar, incluyendo palabras específicas y paréntesis como tokens individuales
-    tokens = re.findall(r'(can-put\?|can-pick\?|can-move\?|iszero\?|blocked\?|move-dir|move-face|run-dirs|:\w+|\b\w+\b|[()])', contenido)
+    tokens = re.findall(r'(=|can-put\?|can-pick\?|can-move\?|iszero\?|blocked\?|move-dir|move-face|run-dirs|:\w+|\b\w+\b|[()])', contenido)
     return tokens
 
 app()

@@ -1,1 +1,10 @@
+(
+(
+(defvar mi_variable 4)
+)
+)
+
+((= mi_variable 9))
+
+(move-face 4 :south)
 (run-dirs :left :up :left :down :right)
