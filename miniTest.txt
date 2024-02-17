@@ -1,10 +1,18 @@
-(
-(
-(defvar mi_variable 4)
-)
-)
+(defvar variable 10)
 
-((= mi_variable 9))
+(defun mi_funcion (a)
+(move a)
+(defvar rotate 6)
+        (mi_funcion rotate))
+        
+(defvar adelante :front)
+        
+(defun vacia ()
+(turn :around))
+        
+(defun otra_funcion (a b c)
+(vacia)
+(run-dirs a b adelante c :right c b)
+(move-dir variable adelante)
 
-(move-face 4 :south)
-(run-dirs :left :up :left :down :right)
+(mi_funcion c))

@@ -17,11 +17,11 @@ def app():
     tokens = tokenizador(contenido)
     try:
         if parse(tokens):
-            print("El programa se encuentra correctamente escrito.")
+            print("TRUE -> El programa se encuentra correctamente escrito.")
         else:
-            print("El programa no se encuentra correctamente escrito.")
+            print("FALSE -> El programa no se encuentra correctamente escrito.")
     except Exception as e:
-        print("El programa no se encuentra correctamente escrito.")
+        print("FALSE -> El programa no se encuentra correctamente escrito.")
         print(str(e))
 
 #Funcion para abrir un archivo en formato txt

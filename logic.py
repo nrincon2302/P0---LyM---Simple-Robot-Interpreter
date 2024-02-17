@@ -7,9 +7,8 @@ import copy
 # Crear listas con caracteres reservados y palabras especiales del lenguaje
 caracteres_reservados = ["(",")",":","-"]
 comandos = ["defvar", "=", "move", "skip", "turn", "face", "put", "pick", "move-dir", "run-dirs", "move-face", "null"]
-comandosfunciones = ["move", "skip", "turn", "face", "put", "pick", "move-dir", "run-dirs", "move-face", "null"]
 constantes = ["dim", "myxpos", "myypos", "mychips", "myballoons", "balloonshere", "chipshere", "spaces"]
-control = ["if", "loop", "repeat"]
+control = ["if", "loop", "repeat", "defun"]
 condition = ["facing?", "blocked?", "can-put?", "can-pick?", "can-move?", "iszero?", "not"]
 
 
@@ -91,37 +90,51 @@ def parse(lexer_result):
             
             # En este punto, ya se habrá cerrado todo. Si no, seguiría en el ciclo
             # Por ende, podemos agregar todo el fragmento lógico completo al conjunto de instrucciones
-            instrucciones.append(fragmento_logico)
-            
-            # Verificar si el cuerpo principal es un comando, una función o un bloque de control
-            # Hacer el parseo correspondiente y agregar el resultado a la lista de verificación
-            
-            # ============================================================
-            # CASO 1: El fragmento lógico es un COMANDO
-            # ============================================================
-            if principal in comandos:
-                correctamente.append(parse_comando(fragmento_logico, principal))
-            # ============================================================
-            # CASO 2: El fragmento lógico es un BLOQUE DE CONTROL
-            # ============================================================
-            elif principal in control:
-                correctamente.append(parse_control(fragmento_logico, principal))
-            # ============================================================
-            # CASO 3: El fragmento lógico es una SIGNACIÓN DE FUNCIÓN
-            # ============================================================
-            elif principal == "defun":
-                correctamente.append(parse_funciones(fragmento_logico))
-            # ============================================================
-            # CASO 4: El fragmento lógico es una FUNCIÓN DECLARADA
-            # ============================================================
-            elif principal in funcionesNumParametros:
-                correctamente.append(parse_funciones(fragmento_logico))
-            # ============================================================
-            # CASO 5: El principal no corresponde a ninguna instrucción
-            # ============================================================
-            # Se lanza una excepción y se detiene la ejecución en este punto
+            if fragmento_logico.index(principal) != 1 and principal in comandos:
+                principales.pop(-1)
+                separado = separar_bloque(fragmento_logico)
+                # Si es un bloque con varias instrucciones, está bien limitado con paréntesis
+                # Separamos cada instrucción por separado
+                for individual in separado[0]:
+                    instrucciones.append(individual)
+                for reservada in separado[1]:
+                    principales.append(reservada)
             else:
-                raise Exception(f"{fragmento_logico} no se reconoce este tipo de instrucción")  
+                instrucciones.append(fragmento_logico)
+        
+    for k in range(len(instrucciones)):
+        principal = principales[k]
+        fragmento_logico = instrucciones[k]
+        
+        # Verificar si el cuerpo principal es un comando, una función o un bloque de control
+        # Hacer el parseo correspondiente y agregar el resultado a la lista de verificación
+        
+        # ============================================================
+        # CASO 1: El fragmento lógico es un COMANDO
+        # ============================================================
+        if principal in comandos:
+            correctamente.append(parse_comando(fragmento_logico, principal))
+        # ============================================================
+        # CASO 2: El fragmento lógico es un BLOQUE DE CONTROL
+        # ============================================================
+        elif principal in control and principal != "defun":
+            correctamente.append(parse_control(fragmento_logico, principal))
+        # ============================================================
+        # CASO 3: El fragmento lógico es una SIGNACIÓN DE FUNCIÓN
+        # ============================================================
+        elif principal == "defun":
+            correctamente.append(parse_funciones(fragmento_logico, principal))
+        # ============================================================
+        # CASO 4: El fragmento lógico es una FUNCIÓN DECLARADA
+        # ============================================================
+        elif principal in funcionesNumParametros.keys():
+            correctamente.append(parse_funciones(fragmento_logico, principal))
+        # ============================================================
+        # CASO 5: El principal no corresponde a ninguna instrucción
+        # ============================================================
+        # Se lanza una excepción y se detiene la ejecución en este punto
+        else:
+            raise Exception(f"{fragmento_logico} no se reconoce este tipo de instrucción")  
 
     # Estará bien escrito si no hay Falsos en la lista
     bien_escrito = False not in correctamente
@@ -133,7 +146,7 @@ def parse(lexer_result):
 # ---------------------------------------------------------------------
 def parse_comando(instruccion, principal):
     # Identificar la posición en la que empieza el principal
-    i = instruccion.index(principal)
+    i = instruccion.index(principal)        
     
     # ============================================================
     # CASO 1a: El comando tiene un principal nulo
@@ -159,11 +172,19 @@ def parse_comando(instruccion, principal):
     elif principal == "defvar" and len(instruccion)%2 == 1:
         # Verificar si la instrucción tiene el formato correcto: 
         # defvar nombre_variable valor_variable, donde el nombre no puede coincidir con otra variable ni con una constante
-        if len(instruccion) >= 5 and instruccion[i+1].isidentifier() and instruccion[i+2].isdigit() and instruccion[i+1] not in tabla_simbolos.keys() and instruccion[i+1] not in constantes:
+        if (len(instruccion) >= 5 and instruccion[i+1].isidentifier() and instruccion[i+1] not in tabla_simbolos.keys() and instruccion[i+1] not in constantes
+            and instruccion[i+2] not in caracteres_reservados and instruccion[i+2] not in comandos and instruccion[i+2] not in control and instruccion[i+2] not in condition):
             nombre_variable = instruccion[i+1]
-            valor_inicial = int(instruccion[i+2])
-            # Agregar el valor de la variable a la tabla de simbolos
-            tabla_simbolos[nombre_variable] = valor_inicial  
+            valor_inicial = instruccion[i+2]
+
+            # Agregar el valor de la variable a la tabla de simbolos si no es reservada/especial ni igual al nombre de una función
+            if (nombre_variable not in caracteres_reservados and nombre_variable not in comandos
+                and nombre_variable not in control and nombre_variable not in constantes
+                and nombre_variable not in condition and nombre_variable not in funcionesNumParametros.keys()):
+                tabla_simbolos[nombre_variable] = valor_inicial  
+            else:
+                return False
+                
         else:
             return False
         # Si no pasó nada feo hasta acá, está bien escrito para el Caso 1b
@@ -175,9 +196,10 @@ def parse_comando(instruccion, principal):
     elif principal == "=" and len(instruccion)%2 == 1:
         # Verificar si la instrucción tiene el formato correcto:
         # = varname new_value, donde varname DEBE NECESARIAMENTE estar en la tabla de símbolos
-        if len(instruccion) >= 5 and instruccion[i+2].isdigit() and instruccion[i+1] in tabla_simbolos.keys():
+        if (len(instruccion) >= 5 and instruccion[i+1] in tabla_simbolos.keys()
+            and instruccion[i+2] not in caracteres_reservados and instruccion[i+2] not in comandos and instruccion[i+2] not in control and instruccion[i+2] not in condition):
             # Actualizar el valor nuevo de la variable en la tabla de símbolos
-            tabla_simbolos[instruccion[i+1]] = int(instruccion[i+2])
+            tabla_simbolos[instruccion[i+1]] = instruccion[i+2]
         else:
             return False
         # Si no pasó nada feo hasta acá, está bien escrito para el Caso 1c
@@ -191,7 +213,7 @@ def parse_comando(instruccion, principal):
     elif principal in ["move", "skip"] and len(instruccion)%2 == 0:
         # Verificar si la instrucción tiene el formato correcto:
         # move OR skip value, donde value debe ser un entero o ser una variable previamente asignada (en cuyo caso, ya es un entero)
-        if len(instruccion) >= 4 and (instruccion[i+1].isdigit() or instruccion[i+1] in tabla_simbolos.keys()):
+        if len(instruccion) >= 4 and (instruccion[i+1].isdigit() or tabla_simbolos[instruccion[i+1]].isdigit() or tabla_simbolos[instruccion[i+1]] == "Temporal"):
             return True
             
     # ============================================================
@@ -202,7 +224,7 @@ def parse_comando(instruccion, principal):
     elif principal == "turn" and len(instruccion)%2 == 0:
         # Verificar si la instrucción tiene el formato correcto:
         # turn :param, donde :param debe ser un valor en una lista definida
-        if len(instruccion) >= 4 and instruccion[i+1] in [":left", ":right", ":around"]:
+        if len(instruccion) >= 4 and (instruccion[i+1] in [":left", ":right", ":around"] or tabla_simbolos[instruccion[i+1]] in [":left", ":right", ":around"] or tabla_simbolos[instruccion[i+1]] == "Temporal"):
             return True
      
     # ============================================================
@@ -213,7 +235,7 @@ def parse_comando(instruccion, principal):
     elif principal == "face" and len(instruccion)%2 == 0:
         # Verificar si la instrucción tiene el formato correcto:
         # face :param, donde :param debe ser un valor en una lista definida
-        if len(instruccion) >= 4 and instruccion[i+1] in [":north", ":south", ":east", ":west"]:
+        if len(instruccion) >= 4 and (instruccion[i+1] in [":north", ":south", ":east", ":west"] or tabla_simbolos[instruccion[i+1]] in [":north", ":south", ":east", ":west"] or tabla_simbolos[instruccion[i+1]] == "Temporal"):
             return True
     
     # ============================================================
@@ -225,7 +247,7 @@ def parse_comando(instruccion, principal):
         # put OR pick X n, donde X es un objeto y n es un número entero
         if len(instruccion) >= 5 and instruccion[i+1] in [":balloons", ":chips"]:
             # El número n puede entrar directo o provenir de una variable ya asignada
-            if instruccion[i+2].isdigit() or instruccion[i+2] in tabla_simbolos.keys():
+            if instruccion[i+2].isdigit() or tabla_simbolos[instruccion[i+2]].isdigit():
                 return True
         
     # ============================================================
@@ -236,7 +258,8 @@ def parse_comando(instruccion, principal):
         
         # move-dir n D, donde n es número y D es un valor definido en una lista
         if principal == "move-dir":
-            if (instruccion[i+1].isdigit() or instruccion[i+1] in tabla_simbolos.keys()) and instruccion[i+2] in [":front", ":right", ":left", ":back"]:
+            if ((instruccion[i+1].isdigit() or tabla_simbolos[instruccion[i+1]].isdigit() or tabla_simbolos[instruccion[i+1]] == "Temporal") and 
+            (instruccion[i+2] in [":front", ":right", ":left", ":back"] or tabla_simbolos[instruccion[i+2]] in [":front", ":right", ":left", ":back", "Temporal"])):
                 return True
             
         # run-dirs Ds, donde Ds es una secuencia de orientaciones definidas en una lista
@@ -244,13 +267,18 @@ def parse_comando(instruccion, principal):
             # Extraemos las direcciones considerando la simetría de paréntesis
             # La última del listado estará en la posición -i (indexado de derecha a izquierda)
             direcciones = instruccion[i+1:-i]
+            # No puede ser un listado vacío de direcciones
+            if len(direcciones) == 0:
+                return False
             # Verificamos que todas las orientaciones sean válidas
-            if all(dir in [":front", ":right", ":left", ":back"] for dir in direcciones):
+            if (dir in [":front", ":right", ":left", ":back"] for dir in direcciones
+                or tabla_simbolos[dir] in [":front", ":right", ":left", ":back", "Temporal"] for dir in direcciones):
                 return True
         
         # move-face n O, donde n es un número y O es una dirección
         elif principal == "move-face":
-            if (instruccion[i+1].isdigit() or instruccion[i+1] in tabla_simbolos.keys()) and instruccion[i+2] in [":north", ":south", ":west", ":east"]:
+            if ((instruccion[i+1].isdigit() or tabla_simbolos[instruccion[i+1]].isdigit() or tabla_simbolos[instruccion[i+1]] == "Temporal") and 
+            (instruccion[i+2] in [":north", ":south", ":west", ":east", "Temporal"] or tabla_simbolos[instruccion[i+2]] in [":north", ":south", ":west", ":east"])):
                 return True
     
     
@@ -258,7 +286,7 @@ def parse_comando(instruccion, principal):
     else:
         raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un Comando.")
     # No tendría por qué llegar acá, pero esto evita inconsistencias
-    return None
+    return False
 
 
 # ---------------------------------------------------------------------
@@ -425,81 +453,117 @@ def parse_control(instruccion, principal):
 # ---------------------------------------------------------------------
 # Parser de funciones y signaciones
 # ---------------------------------------------------------------------
-def parse_funciones(instruccion):
-    # verificar las funciones
+def parse_funciones(instruccion, principal):
+    # Identificar la posición en la que empieza el principal
+    i = instruccion.index(principal)
     
-    #verifica si la funcion no existe 
-    if instruccion[2] not in funcionesNumParametros.keys() and instruccion[3]=="(":
-        instruccion_copia = copy.deepcopy(instruccion[3:])
-        parametros = []
-        x=0
-        #verificar la correcta estructura de la funcion
-        parentesis_abiertos = 0
-         # Iterar sobre los tokens mientras que haya alguno sin procesar
-        centinela = True
-        while len(instruccion_copia) > 0 and centinela==True:
-            # Revisar si inicia un paréntesis porque cada instrucción viene rodeada de uno
-            token_actual = instruccion_copia.pop(0)
-            
-            if token_actual == "(":
-                # Inicializar una lista para los tokens de un fragmento lógico
-                fragmento_logico = []
-                fragmento_logico.append(token_actual)
-                parentesis_abiertos += 1
-                
-                # Repetir la extracción de paréntesis de inicio hasta llegar a una palabra reservada
-                while instruccion_copia[0] == "(":
-                    fragmento_logico.append(instruccion_copia.pop(0))
-                    parentesis_abiertos += 1
-                    
-                # Obtener el cuerpo principal de la instrucción, el primero que no es (
-                principal = instruccion_copia.pop(0)
-                fragmento_logico.append(principal)
-                
-                # Recorrer la instrucción mientras que no se cierre del todo
-                while parentesis_abiertos > 0:
-                    token = instruccion_copia.pop(0)
-                    # Ajustar el contador según los paréntesis que encuentre
-                    if token == "(":
-                        parentesis_abiertos += 1
-                    if token == ")":
-                        parentesis_abiertos -= 1
-                    fragmento_logico.append(token)
+    # ============================================================
+    # CASO 3a: La signación de una función no existente
+    # ============================================================
+    # El principal es defun y el siguiente token es el nombre de la función
+    if principal == "defun" and instruccion[i+1] not in funcionesNumParametros.keys():   
+        # Como no existe en el diccionario, se agrega
+        nombre_funcion = instruccion[i+1]
+        # No puede ser palabra o símbolo especial/reservado ni constante ni variable
+        if (nombre_funcion not in caracteres_reservados and nombre_funcion not in comandos
+            and nombre_funcion not in control and nombre_funcion not in constantes
+            and nombre_funcion not in condition and nombre_funcion not in tabla_simbolos.keys()):
+            # Si es correcto, el siguiente token debería ser un (
+            if instruccion[i+2] != "(":
+                return False
+            else:
+                # Empieza a revisar el listado de parámetros que inicia desde el (
+                parametros = []
+                contador_params = 3
+                # Los agrega a un listado de parámetros contemplando que acaban con )
+                while instruccion[i + contador_params] != ")":
+                    parametros.append(instruccion[i + contador_params])
+                    contador_params += 1
+                # Verifica la terminación del listado de parámetros
+                if instruccion[i + contador_params] != ")":
+                    return False
+                else:
+                    # Agrega temporalmente los parámetros a las variables
+                    for p in parametros:
+                        if p not in tabla_simbolos.keys():
+                            tabla_simbolos[p] = "Temporal"
+                    # Si los parámetros son correctos, revisa la secuencia de comandos
+                    # Se agrega para asegurar la Recursión en caso de que se llame a sí misma en su secuencia
+                    funcionesNumParametros[nombre_funcion] = parametros
+                    secuencia_comandos = instruccion[i + contador_params + 1: -1]
+                    secuencia_correcta = parse(secuencia_comandos)
+                    # Si los parámetros no son correctos, quita la función
+                    if not secuencia_correcta:
+                        funcionesNumParametros.pop(nombre_funcion)
+                        return False
+                    # Elimina los parámetros agregados temporalmente
+                    for p in parametros:
+                        if tabla_simbolos[p] == "Temporal":
+                            tabla_simbolos.pop(p)
+                # Si todo salió bien hasta acá, la signación es correcta
+                return True
         
-                # Hacer el parseo correspondiente y agregar el resultado a la lista de verificación
-                x+=1
-                    
-                if x==1:
-                    if any(isinstance(item, str) for item in fragmento_logico[1:-1]):
-                        for item in fragmento_logico[1:-1]:
-                             parametros.append(item)
-                             if instruccion[4]==")":
-                                 parametros=[]
-                elif x>1:
-                    if fragmento_logico[1] in comandosfunciones:
-                        parse_comando(fragmento_logico, parametros)
-                    if fragmento_logico[1] in control:
-                        parse_control(fragmento_logico, parametros)
-            
-        #Agregar la funcion a el diccionario
-        funcionesNumParametros[instruccion[2]] = parametros
-        return True
+    # ============================================================
+    # CASO 3b: La signación de una función ya existente
+    # ============================================================
+    # El principal es defun y el siguiente token es el nombre de la función
+    elif principal == "defun" and instruccion[i+1] in funcionesNumParametros.keys():
+        # No se puede reescribir una función. Siempre deben tener nombres diferentes
+        return False
     
-    #Hacer el caso donde la funcion ya existe
-    elif instruccion[2] in funcionesNumParametros.keys():
-        if len(instruccion) == 2+1+len(funcionesNumParametros[instruccion[1]]):
-            x=2
-            while instruccion[x]!=")":
-                
-                if not instruccion[x].isdigit() and instruccion[x] not in constantes:
-                        raise Exception(f"Los parametros de {' '.join(instruccion)} no son correctos")
-                x+=1
-            return True       
-                
-            
-    raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
-
-    return None
+    # ============================================================
+    # CASO 4a: El llamado de una función ya existente
+    # ============================================================
+    # El principal llegó acá porque no es una palabra reservada
+    # El principal DEBE NECESARIAMENTE estar en el diccionario de funciones
+    elif principal in funcionesNumParametros.keys():
+        # Al haber sido ya declarada, esto garantiza la Recursión
+        parametros = []
+        # El nombre debe estar seguido de los parámetros
+        k = 1
+        while instruccion[i+k] != ")":
+            parametros.append(instruccion[i+k])
+            k += 1
+        # Si el número de parámetros en la invocación coincide con los de la signación
+        if len(parametros) == len(funcionesNumParametros[principal]):
+            # Revisar que los parámetros que llegan no sean reservados (a menos que sean constantes o variables)
+            # Los parámetros sólo pueden ser variables guardadas, constantes o números enteros
+            for param in parametros:
+                if (param not in caracteres_reservados and param not in comandos
+                    and param not in control and param not in condition and param not in funcionesNumParametros.keys()
+                    and (param in tabla_simbolos.keys() or param in constantes or param.isdigit()
+                         or param in [":left", ":right", ":front", ":back", ":around"] 
+                         or param in [":north", ":south", ":west", ":east"])): 
+                    return True
+                # Si está en alguna lista reservada, está mal
+                else:
+                    return False
+            # Si no tiene parámetros, prosigue
+            return True
+        # Si no coinciden los parámetros, está mal
+        else:
+            return False
+                    
+    
+    # ============================================================
+    # CASO 4b: El llamado de una función no existente
+    # ============================================================
+    # El principal llegó acá porque no es una palabra reservada
+    # El principal no se encuentra en el diccionario de funciones
+    elif principal not in funcionesNumParametros.keys():
+        # Por chequear, tampoco se encuentra en ningún otro listado
+        if (principal not in caracteres_reservados and principal not in comandos
+            and principal not in control and principal not in constantes
+            and principal not in condition and principal not in tabla_simbolos.keys()):
+            # Si pasó por los anteriores filtros, está mal
+            print("Esta función no está creada")
+            return False
+    
+    # En caso de que no cumpla ninguno de estos casos se lanza la excepción
+    else:        
+        raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
+    # No tendría por qué llegar hasta acá, pero así se evitan inconsistencias
+    return False
 
 
 # ---------------------------------------------------------------------
@@ -546,3 +610,28 @@ def contar_parentesis(tokens):
     # Si no coinciden los ( y los ) o si no hay paréntesis, está mal
     if parentesisIniciales != parentesisFinales or parentesisIniciales == 0 or parentesisFinales == 0:
         raise Exception("La cantidad de paréntesis abiertos y cerrados no coincide.")
+
+
+# ---------------------------------------------------------------------
+# Función para separar bloques en instrucciones individuales
+# ---------------------------------------------------------------------
+def separar_bloque(bloque):
+    # Importa que haya una palabra reservada precedida de un (
+    indice = 0
+    individuales = []
+    principales = []
+    while len(bloque) > 0:
+        if bloque[indice] == "(" and bloque[indice + 1] in comandos:
+            comando = []
+            principales.append(bloque[indice + 1])
+            # Agregar tokens de una instrucción hasta llegar al cierre
+            while bloque[indice] != ")":
+                comando.append(bloque.pop(indice))
+            # Agregar el cierre de la instrucción
+            comando.append(bloque.pop(indice))
+            # Agregar el comando cerrado a la lista de instrucciones separadas
+            individuales.append(comando)
+        else:
+            bloque.pop(indice)
+        
+    return individuales, principales

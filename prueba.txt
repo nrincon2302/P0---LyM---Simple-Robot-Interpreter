@@ -25,5 +25,10 @@
 (defun pickAllB ()
   (pick :balloons balloonsHere)
 )
+(
+(move 3)
+(
 (run-dirs :left :up :left :down :right)
-
+(turn :north)
+)
+)
