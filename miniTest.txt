@@ -1,18 +1,4 @@
-(defvar variable 10)
-
-(defun mi_funcion (a)
-(move a)
-(defvar rotate 6)
-        (mi_funcion rotate))
-        
-(defvar adelante :front)
-        
-(defun vacia ()
-(turn :around))
-        
-(defun otra_funcion (a b c)
-(vacia)
-(run-dirs a b adelante c :right c b)
-(move-dir variable adelante)
-
-(mi_funcion c))
+(defun fill ()
+  (loop (not (blocked?)) (move 1)
+  )
+)

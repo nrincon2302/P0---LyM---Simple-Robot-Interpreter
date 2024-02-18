@@ -280,7 +280,12 @@ def parse_comando(instruccion, principal):
             if ((instruccion[i+1].isdigit() or tabla_simbolos[instruccion[i+1]].isdigit() or tabla_simbolos[instruccion[i+1]] == "Temporal") and 
             (instruccion[i+2] in [":north", ":south", ":west", ":east", "Temporal"] or tabla_simbolos[instruccion[i+2]] in [":north", ":south", ":west", ":east"])):
                 return True
+        
+    elif principal in funcionesNumParametros.keys():
+        parse_funciones(instruccion, principal)
     
+    elif principal == "if":
+        parse_control(instruccion, principal)
     
     # En caso de que no cumpla ninguno de estos casos se lanza la excepción
     else:
@@ -302,154 +307,129 @@ def parse_control(instruccion, principal):
     # CASO 2a: El bloque de control es un condicional (IF)
     # ============================================================
     if principal == "if":
-        # Si sigue la estructura, el siguiente es un paréntesis y parsea la condición
-        if instruccion[2] == "(":
-            # Calcula la longitud esperada del condicional si es correcto
-            longitud_condicional = 0
-            if instruccion[3] == "facing?":
-                longitud_condicional = 4
-            elif instruccion[3] == "blocked?":
-                longitud_condicional = 3
-            elif instruccion[3] == "can-put?":
-                longitud_condicional = 5
-            elif instruccion[3] == "can-pick?":
-                longitud_condicional = 5
-            elif instruccion[3] == "can-move?":
-                longitud_condicional = 4
-            elif instruccion[3] == "iszero?":
-                longitud_condicional = 4
-            elif instruccion[3] == "not":
-                comodin=2
         
-                if instruccion[5] == "facing?":
-                    longitud_condicional = 4
-                elif instruccion[5] == "blocked?":
-                    longitud_condicional = 3
-                elif instruccion[5] == "can-put?":
-                    longitud_condicional = 5
-                elif instruccion[5] == "can-pick?":
-                    longitud_condicional = 5
-                elif instruccion[5] == "can-move?":
-                    longitud_condicional = 4
-                elif instruccion[5] == "iszero?":
-                    longitud_condicional = 4
-                else:
-                    raise Exception(f"{instruccion[5]} no es valido como intrucción del condicional")
-            
-            else:
-                    raise Exception(f"{instruccion[3]} no es valido como intrucción del condicional")  
-                
-            # Parsea el condicional específicamente
-            
-            parse_condition(instruccion[2+comodin:2+longitud_condicional+comodin])
-            
-            # Después del condicional, debe venir un comando o un bloque de control
-        
-            b1 = ["("]
-            i = 2 + longitud_condicional + 1
-            contador_parentesis = 1
-            while contador_parentesis != 0:
-                b1.append(instruccion[i])
-                if instruccion[i] == "(":
-                    contador_parentesis += 1
-                if instruccion[i] == ")":
-                    contador_parentesis -= 1
-                i += 1
-            # Parsear el primer bloque que se ha separado
-            if b1[1] in comandos:
-                parse_comando(b1, [])
-            elif b1[1] in control:
-                parse_control(b1, [])
-            # Parsear el segundo bloque que se ha separado
-            b2 = [instruccion[j] for j in range(i,len(instruccion)-1)]
-            if b2[1] in comandos:
-                parse_comando(b2, [])
-            elif b2[1] in control:
-                parse_control(b2, [])
-                
-            return True
-        
-        # Si no arranca en paréntesis después del if, se detiene el programa. Está mal
-        else:
-            raise Exception("La instrucción es un condicional. Se esperaba una condición después del IF.")
-            
-    # Si es una instrucción de bucle loop
-    elif instruccion[1] == "loop":
-        # Si sigue la estructura, el siguiente es un paréntesis y parsea la condición
-        if instruccion[2] == "(":
-                       # Calcula la longitud esperada del condicional si es correcto
-            longitud_condicional = 0
-            if instruccion[3] == "facing?":
-                longitud_condicional = 4
-            elif instruccion[3] == "blocked?":
-                longitud_condicional = 3
-            elif instruccion[3] == "can-put?":
-                longitud_condicional = 5
-            elif instruccion[3] == "can-pick?":
-                longitud_condicional = 5
-            elif instruccion[3] == "can-move?":
-                longitud_condicional = 4
-            elif instruccion[3] == "iszero?":
-                longitud_condicional = 4
-            elif instruccion[3] == "not":
-                comodin=2
-                
-        
-                if instruccion[5] == "facing?":
-                    longitud_condicional = 4
-                elif instruccion[5] == "blocked?":
-                    longitud_condicional = 3
-                elif instruccion[5] == "can-put?":
-                    longitud_condicional = 5
-                elif instruccion[5] == "can-pick?":
-                    longitud_condicional = 5
-                elif instruccion[5] == "can-move?":
-                    longitud_condicional = 4
-                elif instruccion[5] == "iszero?":
-                    longitud_condicional = 4
-                else:
-                    raise Exception(f"{instruccion[5]} no es valido como intrucción dentro del loop")
-            else:
-                    raise Exception(f"{instruccion[3]} no es valido como intrucción dentro del loop")
-            
-            parametros=[]
-            # Parsea el condicional específicamente
-            parse_condition(instruccion[2+comodin:2+longitud_condicional+comodin], parametros)
-            
-            # Después del condicional, debe venir un comando o un bloque de control
-            i = 2 + longitud_condicional
-            # Parsear el bloque que se ha separado
-            b = [instruccion[j] for j in range(i,len(instruccion)-1)]
-            if b[1] in comandos:
-                parse_comando(b, [])
-            elif b[1] in control:
-                parse_control(b, parametros)
-        
-            return True
-        # Si no arranca en paréntesis después del if, se detiene el programa. Está mal
-        else:
-            raise Exception("La instrucción es un bucle. Se esperaba una condición después del LOOP.")
+            count_parentheses = 0
+            condition = []
+            b1 = []
+            b2 = []
+            ins=[]
 
-    # Si es una instrucción de repetición Repeat
-    elif instruccion[1] == "repeat":
-        # Si sigue la estructura, el siguiente es un número entero
-        if instruccion[2].isdigit() or instruccion[2]in tabla_simbolos.keys() or instruccion[2]in parametros:
-            # Le sigue ya sea un comando o un bloque de control
-            b = [instruccion[k] for k in range(3, len(instruccion)-1)]
-            # Parsear el bloque que se ha separado
-            if b[1] in comandos:
-                parse_comando(b, [])
-            elif b[1] in control:
-                parse_control(b, parametros)
-        
+            lst= instruccion
+            for elem in lst[2:-1]:
+                if elem == "(":
+                    count_parentheses += 1
+                elif elem == ")":
+                    count_parentheses -= 1
+                ins.append(elem)
+                if count_parentheses == 0:
+                    # Primer elemento después del paréntesis cerrado es la condición
+                    if not condition:
+                        condition = elem
+                        parse_condition(ins, [])
+                        ins=[]
+                    # Elementos entre el primer y segundo paréntesis cerrado son B1
+                    elif not b1:
+                        b1 = ins
+                        separar_comandos(b1)
+                        ins=[]
+                    # Elementos después del segundo paréntesis cerrado son B2
+                    elif not b2:
+                        b2 = ins
+                        separar_comandos(b2)
+                        ins=[]
+                    else:
+                        raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
+                elif b2:
+                    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
             return True
-        # Si no le sigue un número está mal
-        else:
-            raise Exception("La instrucción es un repeat. Se esperaba un número entero después del REPEAT.")
+    # ============================================================
+    # CASO 2b: Repeat: (loop condition B):
+    # ============================================================
+    if principal == "loop":
+            count_parentheses = 0
+            condition = []
+            b1 = []
+            ins=[]
 
+            lst= instruccion
+            for elem in lst[2:-1]:
+                if elem == "(":
+                    count_parentheses += 1
+                elif elem == ")":
+                    count_parentheses -= 1
+                ins.append(elem)
+                if count_parentheses == 0:
+                    # Primer elemento después del paréntesis cerrado es la condición
+                    if not condition:
+                        condition = elem
+                        parse_condition(ins, [])
+                        ins=[]
+                    # Los siguientes elementos deben de ser un bloque de comandos 
+                    elif not b1:
+                        b1 = ins
+                        separar_comandos(b1)
+                        ins=[]
+                    else:
+                        raise Exception("No se cumple con la estructura del loop, pues se tienen mas bloques de commandos de los que se deberia.")
+            return True
+                        
+    if principal == "repeat":
+        b1 = []
+        ins=[]
+        count_parentheses=0
+        if instruccion[2].isdigit()  or instruccion[2] in constantes or instruccion[2] in tabla_simbolos.keys():
+            if instruccion[-1] ==")":
+                for elem in instruccion[3:-1]:
+                    if elem == "(":
+                        count_parentheses += 1
+                    elif elem == ")":
+                        count_parentheses -= 1
+                    ins.append(elem)
+                    if count_parentheses == 0:
+                        if not b1:
+                            b1 = ins
+                            separar_comandos(b1)
+                        else:
+                            raise Exception("No se cumple con la estructura del repeat, pues se tienen mas bloques de commandos de los que se deberia.")
+            
+                return True
+    
+    
+    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para una estructura de control.")
+  
     return None
 
 
+
+def separar_comandos(b2):
+    #esta funcion se usa para separar los bloques de comandos que puede tener el condicional
+        ins2=[]
+        count_parentheses=0
+        subelem=[]
+        comodin =0
+        if len(b2)>6 and b2[1]=="(":
+            for elem in b2[1:]:
+                if elem == "(":
+                    count_parentheses += 1
+                elif elem == ")":
+                    count_parentheses -= 1
+                ins2.append(elem)
+                if count_parentheses == 0:      
+                    parse_comando(ins2, ins2[1])
+                    ins2=[]
+        else:
+            for elem in b2[0:]:
+
+                if elem == "(":
+                    count_parentheses += 1
+                elif elem == ")":
+                    count_parentheses -= 1
+                ins2.append(elem)
+                if count_parentheses == 0:      
+                    parse_comando(ins2, ins2[1])
+                    ins2=[]
+ 
+        return True
 # ---------------------------------------------------------------------
 # Parser de funciones y signaciones
 # ---------------------------------------------------------------------
@@ -525,7 +505,11 @@ def parse_funciones(instruccion, principal):
             parametros.append(instruccion[i+k])
             k += 1
         # Si el número de parámetros en la invocación coincide con los de la signación
-        if len(parametros) == len(funcionesNumParametros[principal]):
+        numparametros=len(funcionesNumParametros[principal])
+        if not funcionesNumParametros[principal]:
+            numparametros=0
+            
+        if len(parametros) == numparametros:
             # Revisar que los parámetros que llegan no sean reservados (a menos que sean constantes o variables)
             # Los parámetros sólo pueden ser variables guardadas, constantes o números enteros
             for param in parametros:
@@ -537,12 +521,12 @@ def parse_funciones(instruccion, principal):
                     return True
                 # Si está en alguna lista reservada, está mal
                 else:
-                    return False
+                    raise Exception("La instrucción " + ' '.join(instruccion) + " esta en una lista reservada.")
             # Si no tiene parámetros, prosigue
             return True
         # Si no coinciden los parámetros, está mal
         else:
-            return False
+            raise Exception("La instrucción " + ' '.join(instruccion) + " no coincide con los parametros de la funcion.")
                     
     
     # ============================================================
@@ -594,6 +578,19 @@ def parse_condition(instruccion, parametros):
     elif instruccion[1] == "iszero?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
         if instruccion[2].isdigit() or instruccion[2]in tabla_simbolos.keys() or instruccion[2]in parametros:
             return True
+    
+    elif instruccion[1] == "not" and instruccion[0] == "(" and instruccion[-1] == ")":
+        ins=[]
+        count_parentheses=0
+        for elem in instruccion[2:]:
+            if elem == "(":
+                count_parentheses += 1
+            elif elem == ")":
+                count_parentheses -= 1
+            ins.append(elem)
+            if count_parentheses == 0:
+                parse_condition(ins, [])
+                return True
     
     raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
 

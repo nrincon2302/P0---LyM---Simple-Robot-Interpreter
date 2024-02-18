@@ -12,7 +12,7 @@ def app():
     print("*                                           *")
     print("*********************************************\n")
     
-    nombre_archivo=input("Ingrese el nombre del archivo: ")
+    nombre_archivo="miniTest.txt"
     contenido = abrir_archivo(nombre_archivo)
     tokens = tokenizador(contenido)
     try:
