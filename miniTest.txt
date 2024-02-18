@@ -1,4 +1,4 @@
-(defun fill ()
-  (loop (not (blocked?)) (move 1)
-  )
+(
+(if a)
+(turn :left)
 )
