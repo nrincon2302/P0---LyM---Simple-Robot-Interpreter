@@ -593,14 +593,16 @@ def parse_condition(instruccion, parametros):
     elif instruccion[1] == "not" and instruccion[0] == "(" and instruccion[-1] == ")":
         ins=[]
         count_parentheses=0
+        parentesistotales=0
         for elem in instruccion[2:]:
             if elem == "(":
                 count_parentheses += 1
+                parentesistotales+=1
             elif elem == ")":
                 count_parentheses -= 1
             ins.append(elem)
             if count_parentheses == 0:
-                parse_condition(ins, [])
+                parse_condition(ins[parentesistotales-1:-parentesistotales+1], [])
                 return True
     
     raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
