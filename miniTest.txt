@@ -1,4 +1,3 @@
-(defun foo (c p)
-(put :chips c)
-(put :balloons p)
-(move 3)
+(defun pickAllB ()
+  (pick :balloons balloonsHere)
+)

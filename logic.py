@@ -25,7 +25,7 @@ funcionesNumParametros = {}
 # Agrego las contantes a mi tabla de simbolos para verificarlas al tiempo con las variables del usuario
 # Una constante no tiene un valor asignado, pero se puede utilizar en la sintaxis
 for constante in constantes:
-    tabla_simbolos[constante] = None
+    tabla_simbolos[constante] = 0
     
     
 # ---------------------------------------------------------------------
@@ -247,7 +247,8 @@ def parse_comando(instruccion, principal):
         # put OR pick X n, donde X es un objeto y n es un número entero
         if len(instruccion) >= 5 and instruccion[i+1] in [":balloons", ":chips"]:
             # El número n puede entrar directo o provenir de una variable ya asignada
-            if instruccion[i+2].isdigit() or tabla_simbolos[instruccion[i+2]].isdigit() or tabla_simbolos[instruccion[i+2]] == "Temporal":
+            x=instruccion[i+2]
+            if  x.isdigit() or tabla_simbolos[instruccion[i+2]].isdigit() or tabla_simbolos[instruccion[i+2]] == "Temporal":
                 return True
         
     # ============================================================
@@ -280,9 +281,15 @@ def parse_comando(instruccion, principal):
             if ((instruccion[i+1].isdigit() or tabla_simbolos[instruccion[i+1]].isdigit() or tabla_simbolos[instruccion[i+1]] == "Temporal") and 
             (instruccion[i+2] in [":north", ":south", ":west", ":east", "Temporal"] or tabla_simbolos[instruccion[i+2]] in [":north", ":south", ":west", ":east"])):
                 return True
-        
+    # ============================================================
+    # CASO 1h: El comando involucra recursion 
+    # ============================================================
     elif principal in funcionesNumParametros.keys():
         parse_funciones(instruccion, principal)
+        
+    # ============================================================
+    # CASO 1h: El comando involucra estructuras de control 
+    # ============================================================
     
     elif principal in ["if", "loop", "repeat"]:
         parse_control(instruccion, principal)
@@ -315,7 +322,12 @@ def parse_control(instruccion, principal):
             ins=[]
 
             lst= instruccion
+            
+            #ya se sabe que es un if por lo que se empieza a comprobar que siga la estructura estrablecida
+            
             for elem in lst[2:-1]:
+                
+                #aqui empezamos a contar parentesis para poder divir las tres partes que tiene un if (Condicion, B1 y B2)
                 if elem == "(":
                     count_parentheses += 1
                 elif elem == ")":
@@ -326,19 +338,25 @@ def parse_control(instruccion, principal):
                     if not condition:
                         condition = elem
                         parse_condition(ins, [])
+                        #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
                     # Elementos entre el primer y segundo paréntesis cerrado son B1
                     elif not b1:
                         b1 = ins
                         separar_comandos(b1)
+                        #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
                     # Elementos después del segundo paréntesis cerrado son B2
                     elif not b2:
                         b2 = ins
                         separar_comandos(b2)
+                        #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
+                        
+                    #Si siguen habiendo elementos despues de esto es que hay un error
                     else:
                         raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
+                #Si siguen habiendo elementos despues de esto es que hay un error
                 elif b2:
                     raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
             return True
@@ -350,7 +368,6 @@ def parse_control(instruccion, principal):
             condition = []
             b1 = []
             ins=[]
-
             lst= instruccion
             for elem in lst[2:-1]:
                 if elem == "(":
@@ -369,26 +386,35 @@ def parse_control(instruccion, principal):
                         b1 = ins
                         separar_comandos(b1)
                         ins=[]
+                    #Si hay mas elementos depues de esto es que se trata de un error
                     else:
                         raise Exception("No se cumple con la estructura del loop, pues se tienen mas bloques de commandos de los que se deberia.")
             return True
-                        
+    # ============================================================
+    # CASO 2c: Repeat: (repeat n B):
+    # ============================================================
+       
     if principal == "repeat":
         b1 = []
         ins=[]
         count_parentheses=0
+        #sabes que el repeat tiene que tener una variable despues de la palabra repeat 
         if instruccion[2].isdigit()  or instruccion[2] in constantes or instruccion[2] in tabla_simbolos.keys():
+            #con este condicional solo nos aseguramos que esta intruccion se cierre con parentesis para evitar errores 
             if instruccion[-1] ==")":
+                #Aqui vamos a iterar donde en teoria deberia encontrarse ubicado el bloque de comandos 
                 for elem in instruccion[3:-1]:
                     if elem == "(":
                         count_parentheses += 1
                     elif elem == ")":
                         count_parentheses -= 1
                     ins.append(elem)
+                    #Aqui entramos a analizar los diferentes comandos dentro del bloque
                     if count_parentheses == 0:
                         if not b1:
                             b1 = ins
                             separar_comandos(b1)
+                        #Solo hay un bloque de comandos, si hay mas es por que esta mal
                         else:
                             raise Exception("No se cumple con la estructura del repeat, pues se tienen mas bloques de commandos de los que se deberia.")
             
@@ -400,13 +426,20 @@ def parse_control(instruccion, principal):
     return None
 
 
-
+# ---------------------------------------------------------------------
+# Función para separar comandos dentro de las estructuras de control
+# ---------------------------------------------------------------------
 def separar_comandos(b2):
     #esta funcion se usa para separar los bloques de comandos que puede tener el condicional
         ins2=[]
         count_parentheses=0
         subelem=[]
         comodin =0
+        
+        #Aqui fue necesario separarlo en dos partes por que una cosa es un bloque que tiene un parentesis que une los diferentes comandos y 
+        #Otra cosa es un comando individual que como no tiene ese parentesis entonces el caso es diferente 
+        
+        #Aqui se comprueban los bloques de comandos, se sabe que deben haber mas de 6, ya que los bloques minimo tienen 6 parentesis ((x)(y)) y  en su posicion 1 debe haber un ( 
         if len(b2)>6 and b2[1]=="(":
             for elem in b2[1:]:
                 if elem == "(":
@@ -414,9 +447,13 @@ def separar_comandos(b2):
                 elif elem == ")":
                     count_parentheses -= 1
                 ins2.append(elem)
+                
+                #Se va separando cada comando para mandarlo al parse_comando
                 if count_parentheses == 0:      
                     parse_comando(ins2, ins2[1])
                     ins2=[]
+        
+        #Aqui se toman en cuenta los casos de comandos individuales
         else:
             for elem in b2[0:]:
 
@@ -425,6 +462,8 @@ def separar_comandos(b2):
                 elif elem == ")":
                     count_parentheses -= 1
                 ins2.append(elem)
+                
+                #Aqui se manda el comando para ser verificado
                 if count_parentheses == 0:      
                     parse_comando(ins2, ins2[1])
                     ins2=[]
