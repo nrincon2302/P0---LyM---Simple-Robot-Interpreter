@@ -1,4 +1,6 @@
-(defun fill ()
-  (loop (not (blocked?)) (move 1)
-  )
+(defun foo (c p)
+(put :chips c)
+(put :balloons p)
+(move 3)
+
 )

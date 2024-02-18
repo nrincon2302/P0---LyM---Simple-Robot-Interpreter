@@ -247,7 +247,7 @@ def parse_comando(instruccion, principal):
         # put OR pick X n, donde X es un objeto y n es un número entero
         if len(instruccion) >= 5 and instruccion[i+1] in [":balloons", ":chips"]:
             # El número n puede entrar directo o provenir de una variable ya asignada
-            if instruccion[i+2].isdigit() or tabla_simbolos[instruccion[i+2]].isdigit():
+            if instruccion[i+2].isdigit() or tabla_simbolos[instruccion[i+2]].isdigit() or tabla_simbolos[instruccion[i+2]] == "Temporal":
                 return True
         
     # ============================================================
