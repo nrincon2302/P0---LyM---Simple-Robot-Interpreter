@@ -284,7 +284,7 @@ def parse_comando(instruccion, principal):
     elif principal in funcionesNumParametros.keys():
         parse_funciones(instruccion, principal)
     
-    elif principal == "if":
+    elif principal in ["if", "loop", "repeat"]:
         parse_control(instruccion, principal)
     
     # En caso de que no cumpla ninguno de estos casos se lanza la excepción

@@ -2,5 +2,3 @@
 (put :chips c)
 (put :balloons p)
 (move 3)
-
-)
