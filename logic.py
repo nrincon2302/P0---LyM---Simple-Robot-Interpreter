@@ -31,7 +31,7 @@ for constante in constantes:
 # ---------------------------------------------------------------------
 # Inicio de las funciones del Parser
 # ---------------------------------------------------------------------
-def parse(lexer_result):
+def parse(lexer_result, esParteDeFuncion):
     # ============================================================
     # CASO 0a: El programa vacío es válido
     # ============================================================
@@ -109,32 +109,59 @@ def parse(lexer_result):
         # Verificar si el cuerpo principal es un comando, una función o un bloque de control
         # Hacer el parseo correspondiente y agregar el resultado a la lista de verificación
         
-        # ============================================================
-        # CASO 1: El fragmento lógico es un COMANDO
-        # ============================================================
-        if principal in comandos:
-            correctamente.append(parse_comando(fragmento_logico, principal))
-        # ============================================================
-        # CASO 2: El fragmento lógico es un BLOQUE DE CONTROL
-        # ============================================================
-        elif principal in control and principal != "defun":
-            correctamente.append(parse_control(fragmento_logico, principal))
-        # ============================================================
-        # CASO 3: El fragmento lógico es una SIGNACIÓN DE FUNCIÓN
-        # ============================================================
-        elif principal == "defun":
-            correctamente.append(parse_funciones(fragmento_logico, principal))
-        # ============================================================
-        # CASO 4: El fragmento lógico es una FUNCIÓN DECLARADA
-        # ============================================================
-        elif principal in funcionesNumParametros.keys():
-            correctamente.append(parse_funciones(fragmento_logico, principal))
-        # ============================================================
-        # CASO 5: El principal no corresponde a ninguna instrucción
-        # ============================================================
-        # Se lanza una excepción y se detiene la ejecución en este punto
-        else:
-            raise Exception(f"{fragmento_logico} no se reconoce este tipo de instrucción")  
+        if not esParteDeFuncion:
+            # ============================================================
+            # CASO 1: El fragmento lógico es un COMANDO
+            # ============================================================
+            if principal in comandos:
+                correctamente.append(parse_comando(fragmento_logico, principal))
+            # ============================================================
+            # CASO 2: El fragmento lógico es un BLOQUE DE CONTROL
+            # ============================================================
+            elif principal in control and principal != "defun":
+                correctamente.append(parse_control(fragmento_logico, principal))
+            # ============================================================
+            # CASO 3: El fragmento lógico es una SIGNACIÓN DE FUNCIÓN
+            # ============================================================
+            elif principal == "defun":
+                correctamente.append(parse_funciones(fragmento_logico, principal))
+            # ============================================================
+            # CASO 4: El fragmento lógico es una FUNCIÓN DECLARADA
+            # ============================================================
+            elif principal in funcionesNumParametros.keys():
+                correctamente.append(parse_funciones(fragmento_logico, principal))
+            # ============================================================
+            # CASO 5: El principal no corresponde a ninguna instrucción
+            # ============================================================
+            # Se lanza una excepción y se detiene la ejecución en este punto
+            else:
+                raise Exception(f"{fragmento_logico} no se reconoce este tipo de instrucción")  
+        
+        #Uso de nuevo el parser pero para las intrucciones que estan dentro de una estructura de control
+        elif esParteDeFuncion:
+            # ============================================================
+            # CASO 1: El fragmento lógico es un COMANDO
+            # ============================================================
+            if principal in comandos:
+                parse_comando(fragmento_logico, principal)
+
+            # ============================================================
+            # CASO 1h: El comando involucra recursion 
+            # ============================================================
+            elif principal in funcionesNumParametros.keys():
+                parse_funciones(fragmento_logico, principal)
+                
+            # ============================================================
+            # CASO 1h: El comando involucra estructuras de control 
+            # ============================================================
+            elif principal in ["if", "loop", "repeat"]:
+                parse_control(fragmento_logico, principal)
+                
+            else:
+                raise Exception("La instrucción " + ' '.join(fragmento_logico) + " no tiene la forma esperada.")
+            
+            return True
+        
 
     # Estará bien escrito si no hay Falsos en la lista
     bien_escrito = False not in correctamente
@@ -281,18 +308,7 @@ def parse_comando(instruccion, principal):
             if ((instruccion[i+1].isdigit() or tabla_simbolos[instruccion[i+1]].isdigit() or tabla_simbolos[instruccion[i+1]] == "Temporal") and 
             (instruccion[i+2] in [":north", ":south", ":west", ":east", "Temporal"] or tabla_simbolos[instruccion[i+2]] in [":north", ":south", ":west", ":east"])):
                 return True
-    # ============================================================
-    # CASO 1h: El comando involucra recursion 
-    # ============================================================
-    elif principal in funcionesNumParametros.keys():
-        parse_funciones(instruccion, principal)
-        
-    # ============================================================
-    # CASO 1h: El comando involucra estructuras de control 
-    # ============================================================
-    
-    elif principal in ["if", "loop", "repeat"]:
-        parse_control(instruccion, principal)
+
     
     # En caso de que no cumpla ninguno de estos casos se lanza la excepción
     else:
@@ -343,16 +359,15 @@ def parse_control(instruccion, principal):
                     # Elementos entre el primer y segundo paréntesis cerrado son B1
                     elif not b1:
                         b1 = ins
-                        separar_comandos(b1)
+                        parse(b1, True)
                         #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
                     # Elementos después del segundo paréntesis cerrado son B2
                     elif not b2:
                         b2 = ins
-                        separar_comandos(b2)
+                        parse(b2, True)
                         #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
-                        
                     #Si siguen habiendo elementos despues de esto es que hay un error
                     else:
                         raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
@@ -384,7 +399,7 @@ def parse_control(instruccion, principal):
                     # Los siguientes elementos deben de ser un bloque de comandos 
                     elif not b1:
                         b1 = ins
-                        separar_comandos(b1)
+                        parse(b1, True)
                         ins=[]
                     #Si hay mas elementos depues de esto es que se trata de un error
                     else:
@@ -413,7 +428,7 @@ def parse_control(instruccion, principal):
                     if count_parentheses == 0:
                         if not b1:
                             b1 = ins
-                            separar_comandos(b1)
+                            parse(b1, True)
                         #Solo hay un bloque de comandos, si hay mas es por que esta mal
                         else:
                             raise Exception("No se cumple con la estructura del repeat, pues se tienen mas bloques de commandos de los que se deberia.")
@@ -426,49 +441,6 @@ def parse_control(instruccion, principal):
     return None
 
 
-# ---------------------------------------------------------------------
-# Función para separar comandos dentro de las estructuras de control
-# ---------------------------------------------------------------------
-def separar_comandos(b2):
-    #esta funcion se usa para separar los bloques de comandos que puede tener el condicional
-        ins2=[]
-        count_parentheses=0
-        subelem=[]
-        comodin =0
-        
-        #Aqui fue necesario separarlo en dos partes por que una cosa es un bloque que tiene un parentesis que une los diferentes comandos y 
-        #Otra cosa es un comando individual que como no tiene ese parentesis entonces el caso es diferente 
-        
-        #Aqui se comprueban los bloques de comandos, se sabe que deben haber mas de 6, ya que los bloques minimo tienen 6 parentesis ((x)(y)) y  en su posicion 1 debe haber un ( 
-        if len(b2)>6 and b2[1]=="(":
-            for elem in b2[1:]:
-                if elem == "(":
-                    count_parentheses += 1
-                elif elem == ")":
-                    count_parentheses -= 1
-                ins2.append(elem)
-                
-                #Se va separando cada comando para mandarlo al parse_comando
-                if count_parentheses == 0:      
-                    parse_comando(ins2, ins2[1])
-                    ins2=[]
-        
-        #Aqui se toman en cuenta los casos de comandos individuales
-        else:
-            for elem in b2[0:]:
-
-                if elem == "(":
-                    count_parentheses += 1
-                elif elem == ")":
-                    count_parentheses -= 1
-                ins2.append(elem)
-                
-                #Aqui se manda el comando para ser verificado
-                if count_parentheses == 0:      
-                    parse_comando(ins2, ins2[1])
-                    ins2=[]
- 
-        return True
 # ---------------------------------------------------------------------
 # Parser de funciones y signaciones
 # ---------------------------------------------------------------------
@@ -510,7 +482,7 @@ def parse_funciones(instruccion, principal):
                     # Se agrega para asegurar la Recursión en caso de que se llame a sí misma en su secuencia
                     funcionesNumParametros[nombre_funcion] = parametros
                     secuencia_comandos = instruccion[i + contador_params + 1: -1]
-                    secuencia_correcta = parse(secuencia_comandos)
+                    secuencia_correcta = parse(secuencia_comandos,False)
                     # Si los parámetros no son correctos, quita la función
                     if not secuencia_correcta:
                         funcionesNumParametros.pop(nombre_funcion)

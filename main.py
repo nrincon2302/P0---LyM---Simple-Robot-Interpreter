@@ -16,7 +16,7 @@ def app():
     contenido = abrir_archivo(nombre_archivo)
     tokens = tokenizador(contenido)
     try:
-        if parse(tokens):
+        if parse(tokens, False):
             print("TRUE -> El programa se encuentra correctamente escrito.")
         else:
             print("FALSE -> El programa no se encuentra correctamente escrito.")
