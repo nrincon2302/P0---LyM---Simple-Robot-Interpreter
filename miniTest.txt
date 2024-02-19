@@ -1,24 +1,3 @@
-(defun fill ()
-  (repeat Spaces (if (not (((isZero? myChips)))) (put :chips 1))
-  )
+(loop (not (isZero? myChips)) ()
+
 )
-
-(defvar norte :north)
-(defvar atras :around)
-(defvar one 1)
-
-(defun mi_funcion (a b c)
-(defvar ca 2)
-(turn atras)
-(run-dirs a b b b c a)
-)
-
-(defun otra (d)
-(mi_funcion d :west 3)
-(move-face one norte)
-(otra norte))
-
-(defun vacia ()
-(pick :balloons 4)
-(move-dir one :front)
-(vacia))

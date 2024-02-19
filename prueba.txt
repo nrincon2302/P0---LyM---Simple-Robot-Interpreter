@@ -24,7 +24,7 @@
 (put :chips 6)
 )
 (defun fill ()
-  (repeat Spaces (if (not (isZero? myChips)) (put :chips 1))
+  (repeat Spaces (if (not (isZero? myChips)) (put :chips 1) ())
   )
 )
 (defun pickAllB ()

@@ -54,11 +54,13 @@ def parse(lexer_result, esParteDeFuncion):
     correctamente = []
     intermedio = []
     parentesis_abiertos = 0
-    
+
     # Iterar sobre los tokens mientras que haya alguno sin procesar
     # Cada vez que itere, necesariamente estará en otra instrucción
     while len(tokens) > 0:
         # Revisar si inicia con un paréntesis porque cada instrucción viene rodeada de uno
+        if tokens[0]=="(" and tokens[1]==")" and len(tokens)==2:
+            return True
         token_actual = tokens.pop(0)
         if token_actual == "(":
             # Inicializar una lista para los tokens de un fragmento lógico
@@ -381,6 +383,10 @@ def parse_control(instruccion, principal):
                 #Si siguen habiendo elementos despues de esto es que hay un error
                 elif b2:
                     raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
+            
+            if not condition or not b1 or not b2:
+                    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
+        
             return True
         # ============================================================
         # CASO 2b: Repeat: (loop condition B):
@@ -411,6 +417,10 @@ def parse_control(instruccion, principal):
                     #Si hay mas elementos depues de esto es que se trata de un error
                     else:
                         raise Exception("No se cumple con la estructura del loop, pues se tienen mas bloques de commandos de los que se deberia.")
+           
+            if not condition or not b1:
+                raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
+        
             return True
         # ============================================================
         # CASO 2c: Repeat: (repeat n B):
@@ -439,6 +449,8 @@ def parse_control(instruccion, principal):
                             #Solo hay un bloque de comandos, si hay mas es por que esta mal
                             else:
                                 raise Exception("No se cumple con la estructura del repeat, pues se tienen mas bloques de commandos de los que se deberia.")
+                    if not b1:
+                        raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
                 
                     return True
         
