@@ -1,8 +1,13 @@
 (
-(if (not (blocked?)) (move 1) (nulla))
-(if (not (blocked?)) (move 1) (nulla))
+if (not (blocked?)) 
+(
+(
+(move 1)
+(move-face 4 :north)
+) )
+
+(
+loop (can-put? :chips 2) 
 (turn :left)
-(turn :left)
-(turn :left)
-(turn :left)
+)
 )

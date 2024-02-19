@@ -54,6 +54,7 @@ def parse(lexer_result, esParteDeFuncion):
     instrucciones = []
     principales = []
     correctamente = []
+    intermedio = []
     parentesis_abiertos = 0
     
     # Iterar sobre los tokens mientras que haya alguno sin procesar
@@ -143,26 +144,25 @@ def parse(lexer_result, esParteDeFuncion):
             # CASO 1: El fragmento lógico es un COMANDO
             # ============================================================
             if principal in comandos:
-                return parse_comando(fragmento_logico, principal)
+                intermedio.append(parse_comando(fragmento_logico, principal))
 
             # ============================================================
             # CASO 1h: El comando involucra recursion 
             # ============================================================
             elif principal in funcionesNumParametros.keys():
-                return parse_funciones(fragmento_logico, principal)
+                intermedio.append(parse_funciones(fragmento_logico, principal))
                 
             # ============================================================
             # CASO 1h: El comando involucra estructuras de control 
             # ============================================================
             elif principal in ["if", "loop", "repeat"]:
-                return parse_control(fragmento_logico, principal)
+                intermedio.append(parse_control(fragmento_logico, principal))
                 
             else:
                 raise Exception("La instrucción " + ' '.join(fragmento_logico) + " no tiene la forma esperada.")
-        
 
-    # Estará bien escrito si no hay Falsos en la lista
-    bien_escrito = False not in correctamente
+    # Estará bien escrito si no hay Falsos en las listas
+    bien_escrito = False not in correctamente and False not in intermedio
     return bien_escrito
     
 
@@ -602,7 +602,7 @@ def parse_condition(instruccion, parametros):
         if instruccion[2] in [":north", ":south", ":east", ":west"]:
             return True
     
-    elif instruccion[1] == "iszero?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")" :
+    elif instruccion[1] == "iszero?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
         if instruccion[2].isdigit() or instruccion[2]in tabla_simbolos.keys() or instruccion[2]in parametros:
             return True
     
@@ -613,7 +613,8 @@ def parse_condition(instruccion, parametros):
         return parse_condition(instruccion, parametros)
         
     
-    raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
+    else:
+        raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
     return False
 
 
@@ -640,7 +641,7 @@ def separar_bloque(bloque, principal):
     principales = []
     while len(bloque) > 0:
         # Manejo en caso que el bloque inicie con un comando
-        if bloque[indice] == "(" and bloque[indice + 1] in comandos:
+        if bloque[indice] == "(" and (bloque[indice + 1] in comandos or bloque[indice + 1] != "("):
             comando = []
             principales.append(bloque[indice + 1])
             # Agregar tokens de una instrucción hasta llegar al cierre
