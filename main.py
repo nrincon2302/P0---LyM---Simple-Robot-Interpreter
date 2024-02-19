@@ -12,7 +12,7 @@ def app():
     print("*                                           *")
     print("*********************************************\n")
     
-    nombre_archivo="miniTest.txt"
+    nombre_archivo=input("Ingrese el nombre del archivo a analizar: ")
     contenido = abrir_archivo(nombre_archivo)
     tokens = tokenizador(contenido)
     try:
@@ -22,7 +22,6 @@ def app():
             print("FALSE -> El programa no se encuentra correctamente escrito.")
     except Exception as e:
         print("FALSE -> El programa no se encuentra correctamente escrito.")
-        print(str(e))
 
 #Funcion para abrir un archivo en formato txt
 def abrir_archivo(nombre_archivo):

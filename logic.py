@@ -25,7 +25,7 @@ funcionesNumParametros = {}
 # Agrego las contantes a mi tabla de simbolos para verificarlas al tiempo con las variables del usuario
 # Una constante no tiene un valor asignado, pero se puede utilizar en la sintaxis
 for constante in constantes:
-    tabla_simbolos[constante] = 0
+    tabla_simbolos[constante] = "0"
     
     
 # ---------------------------------------------------------------------
@@ -92,7 +92,7 @@ def parse(lexer_result, esParteDeFuncion):
             # Por ende, podemos agregar todo el fragmento lógico completo al conjunto de instrucciones
             if fragmento_logico.index(principal) != 1 and principal in comandos:
                 principales.pop(-1)
-                separado = separar_bloque(fragmento_logico)
+                separado = separar_bloque(fragmento_logico, principal)
                 # Si es un bloque con varias instrucciones, está bien limitado con paréntesis
                 # Separamos cada instrucción por separado
                 for individual in separado[0]:
@@ -143,24 +143,22 @@ def parse(lexer_result, esParteDeFuncion):
             # CASO 1: El fragmento lógico es un COMANDO
             # ============================================================
             if principal in comandos:
-                parse_comando(fragmento_logico, principal)
+                return parse_comando(fragmento_logico, principal)
 
             # ============================================================
             # CASO 1h: El comando involucra recursion 
             # ============================================================
             elif principal in funcionesNumParametros.keys():
-                parse_funciones(fragmento_logico, principal)
+                return parse_funciones(fragmento_logico, principal)
                 
             # ============================================================
             # CASO 1h: El comando involucra estructuras de control 
             # ============================================================
             elif principal in ["if", "loop", "repeat"]:
-                parse_control(fragmento_logico, principal)
+                return parse_control(fragmento_logico, principal)
                 
             else:
                 raise Exception("La instrucción " + ' '.join(fragmento_logico) + " no tiene la forma esperada.")
-            
-            return True
         
 
     # Estará bien escrito si no hay Falsos en la lista
@@ -321,22 +319,27 @@ def parse_comando(instruccion, principal):
 # Parser de bloques de control
 # ---------------------------------------------------------------------
 def parse_control(instruccion, principal):
-    # verificar los comandos de control
+    # Identificar la posición en la que empieza el principal
+    i = instruccion.index(principal)
     
-    # Si no se especifica lo contrario, se tiene un 0 porque no hay NOT
-    comodin=0
-
-    # ============================================================
-    # CASO 2a: El bloque de control es un condicional (IF)
-    # ============================================================
-    if principal == "if":
-        
+    if i != 1:
+        # Por la estructura del lenguaje, es válido eliminar lo externo
+        instruccion.pop(0)
+        instruccion.pop(-1)
+        # Se manda recursivamente a que parsee el interior del bloque
+        return parse(instruccion, False)
+    
+    else:
+        # ============================================================
+        # CASO 2a: El bloque de control es un condicional (IF)
+        # ============================================================
+        if principal == "if":
             count_parentheses = 0
             condition = []
             b1 = []
             b2 = []
             ins=[]
-
+    
             lst= instruccion
             
             #ya se sabe que es un if por lo que se empieza a comprobar que siga la estructura estrablecida
@@ -353,19 +356,25 @@ def parse_control(instruccion, principal):
                     # Primer elemento después del paréntesis cerrado es la condición
                     if not condition:
                         condition = elem
-                        parse_condition(ins, [])
+                        bien = parse_condition(ins, [])
+                        if not bien:
+                            return False
                         #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
                     # Elementos entre el primer y segundo paréntesis cerrado son B1
                     elif not b1:
                         b1 = ins
-                        parse(b1, True)
+                        bien = parse(b1, True)
+                        if not bien:
+                            return False
                         #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
                     # Elementos después del segundo paréntesis cerrado son B2
                     elif not b2:
                         b2 = ins
-                        parse(b2, True)
+                        bien = parse(b2, True)
+                        if not bien:
+                            return False
                         #se inicializa nuevamente la lista para dividir los pedazos de el condicional
                         ins=[]
                     #Si siguen habiendo elementos despues de esto es que hay un error
@@ -375,10 +384,10 @@ def parse_control(instruccion, principal):
                 elif b2:
                     raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un condicional.")
             return True
-    # ============================================================
-    # CASO 2b: Repeat: (loop condition B):
-    # ============================================================
-    if principal == "loop":
+        # ============================================================
+        # CASO 2b: Repeat: (loop condition B):
+        # ============================================================
+        if principal == "loop":
             count_parentheses = 0
             condition = []
             b1 = []
@@ -405,40 +414,40 @@ def parse_control(instruccion, principal):
                     else:
                         raise Exception("No se cumple con la estructura del loop, pues se tienen mas bloques de commandos de los que se deberia.")
             return True
-    # ============================================================
-    # CASO 2c: Repeat: (repeat n B):
-    # ============================================================
-       
-    if principal == "repeat":
-        b1 = []
-        ins=[]
-        count_parentheses=0
-        #sabes que el repeat tiene que tener una variable despues de la palabra repeat 
-        if instruccion[2].isdigit()  or instruccion[2] in constantes or instruccion[2] in tabla_simbolos.keys():
-            #con este condicional solo nos aseguramos que esta intruccion se cierre con parentesis para evitar errores 
-            if instruccion[-1] ==")":
-                #Aqui vamos a iterar donde en teoria deberia encontrarse ubicado el bloque de comandos 
-                for elem in instruccion[3:-1]:
-                    if elem == "(":
-                        count_parentheses += 1
-                    elif elem == ")":
-                        count_parentheses -= 1
-                    ins.append(elem)
-                    #Aqui entramos a analizar los diferentes comandos dentro del bloque
-                    if count_parentheses == 0:
-                        if not b1:
-                            b1 = ins
-                            parse(b1, True)
-                        #Solo hay un bloque de comandos, si hay mas es por que esta mal
-                        else:
-                            raise Exception("No se cumple con la estructura del repeat, pues se tienen mas bloques de commandos de los que se deberia.")
-            
-                return True
-    
-    
-    raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para una estructura de control.")
-  
-    return None
+        # ============================================================
+        # CASO 2c: Repeat: (repeat n B):
+        # ============================================================
+           
+        if principal == "repeat":
+            b1 = []
+            ins=[]
+            count_parentheses=0
+            #sabes que el repeat tiene que tener una variable despues de la palabra repeat 
+            if instruccion[2].isdigit()  or instruccion[2] in constantes or instruccion[2] in tabla_simbolos.keys():
+                #con este condicional solo nos aseguramos que esta intruccion se cierre con parentesis para evitar errores 
+                if instruccion[-1] ==")":
+                    #Aqui vamos a iterar donde en teoria deberia encontrarse ubicado el bloque de comandos 
+                    for elem in instruccion[3:-1]:
+                        if elem == "(":
+                            count_parentheses += 1
+                        elif elem == ")":
+                            count_parentheses -= 1
+                        ins.append(elem)
+                        #Aqui entramos a analizar los diferentes comandos dentro del bloque
+                        if count_parentheses == 0:
+                            if not b1:
+                                b1 = ins
+                                parse(b1, True)
+                            #Solo hay un bloque de comandos, si hay mas es por que esta mal
+                            else:
+                                raise Exception("No se cumple con la estructura del repeat, pues se tienen mas bloques de commandos de los que se deberia.")
+                
+                    return True
+        
+        
+        raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para una estructura de control.")
+      
+    return False
 
 
 # ---------------------------------------------------------------------
@@ -447,6 +456,13 @@ def parse_control(instruccion, principal):
 def parse_funciones(instruccion, principal):
     # Identificar la posición en la que empieza el principal
     i = instruccion.index(principal)
+    
+    if i != 1:
+        # Por la estructura del lenguaje, es válido eliminar lo externo
+        instruccion.pop(0)
+        instruccion.pop(-1)
+        # Se manda recursivamente a que parsee el interior del bloque
+        return parse(instruccion, False)
     
     # ============================================================
     # CASO 3a: La signación de una función no existente
@@ -591,22 +607,14 @@ def parse_condition(instruccion, parametros):
             return True
     
     elif instruccion[1] == "not" and instruccion[0] == "(" and instruccion[-1] == ")":
-        ins=[]
-        count_parentheses=0
-        parentesistotales=0
-        for elem in instruccion[2:]:
-            if elem == "(":
-                count_parentheses += 1
-                parentesistotales+=1
-            elif elem == ")":
-                count_parentheses -= 1
-            ins.append(elem)
-            if count_parentheses == 0:
-                parse_condition(ins[parentesistotales-1:-parentesistotales+1], [])
-                return True
+        instruccion.pop(0)
+        instruccion.pop(0)
+        instruccion.pop(-1)
+        return parse_condition(instruccion, parametros)
+        
     
-    raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
-
+    else:
+        raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
     return False
 
 
@@ -625,12 +633,14 @@ def contar_parentesis(tokens):
 # ---------------------------------------------------------------------
 # Función para separar bloques en instrucciones individuales
 # ---------------------------------------------------------------------
-def separar_bloque(bloque):
+def separar_bloque(bloque, principal):
     # Importa que haya una palabra reservada precedida de un (
+    posicion = bloque.index(principal)
     indice = 0
     individuales = []
     principales = []
     while len(bloque) > 0:
+        # Manejo en caso que el bloque inicie con un comando
         if bloque[indice] == "(" and bloque[indice + 1] in comandos:
             comando = []
             principales.append(bloque[indice + 1])
@@ -641,6 +651,8 @@ def separar_bloque(bloque):
             comando.append(bloque.pop(indice))
             # Agregar el comando cerrado a la lista de instrucciones separadas
             individuales.append(comando)
+        # Manejo en caso que el bloque inicie con una estructura de control
+
         else:
             bloque.pop(indice)
         

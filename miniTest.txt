@@ -1,4 +1,5 @@
-(defun fill ()
-  (repeat Spaces (if (not (((isZero? myChips)))) (put :chips 1))
-  )
+(
+(defvar one 1)
+(if (not (blocked?)) ((move one)(move-face 4 :north)) (null))
+(turn :left)
 )
