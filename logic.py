@@ -356,7 +356,7 @@ def parse_control(instruccion, principal):
                     # Primer elemento después del paréntesis cerrado es la condición
                     if not condition:
                         condition = elem
-                        bien = parse_condition(ins, [])
+                        bien = parse_condition(eliminar_parentesis_extra(ins), [])
                         if not bien:
                             return False
                         #se inicializa nuevamente la lista para dividir los pedazos de el condicional
@@ -403,7 +403,7 @@ def parse_control(instruccion, principal):
                     # Primer elemento después del paréntesis cerrado es la condición
                     if not condition:
                         condition = elem
-                        parse_condition(ins, [])
+                        parse_condition(eliminar_parentesis_extra(ins), [])
                         ins=[]
                     # Los siguientes elementos deben de ser un bloque de comandos 
                     elif not b1:
@@ -575,8 +575,21 @@ def parse_funciones(instruccion, principal):
         raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
     # No tendría por qué llegar hasta acá, pero así se evitan inconsistencias
     return False
-
-
+# ---------------------------------------------------------------------
+# Eliminar parentesis exteriores para el parse condirion
+# ---------------------------------------------------------------------
+def eliminar_parentesis_extra(lista):
+    pila = []
+    contar=0
+    for caracter in lista:
+        if caracter == "(":
+            contar+=1
+        else:
+           break
+    if contar>1:
+        return lista[contar-1:-contar+1]
+    else:
+        return lista
 # ---------------------------------------------------------------------
 # Parser de condicionales
 # ---------------------------------------------------------------------
@@ -610,7 +623,7 @@ def parse_condition(instruccion, parametros):
         instruccion.pop(0)
         instruccion.pop(0)
         instruccion.pop(-1)
-        return parse_condition(instruccion, parametros)
+        return parse_condition(eliminar_parentesis_extra(instruccion), parametros)
         
     
     raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")

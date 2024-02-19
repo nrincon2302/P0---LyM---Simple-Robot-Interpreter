@@ -1,4 +1,4 @@
 (defun fill (a)
-  (repeat a (if (not (isZero? aaaaa)) (put :chips 1))
+  (repeat a (if ((not ((((isZero? a)))))) (put :chips 2))
   )
 )
