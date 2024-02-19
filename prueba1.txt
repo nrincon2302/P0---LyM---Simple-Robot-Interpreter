@@ -1,7 +1,7 @@
 (((loop (not (isZero? myChips)) 
 (
 ((if (isZero? myChips)
-(put :chips 1)
+(put :chips 1)()
 ))
 )
   ))

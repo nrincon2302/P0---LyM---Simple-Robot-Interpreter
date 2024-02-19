@@ -12,7 +12,7 @@ def app():
     print("*                                           *")
     print("*********************************************\n")
     
-    nombre_archivo="prueba.txt"
+    nombre_archivo="prueba1.txt"
     contenido = abrir_archivo(nombre_archivo)
     tokens = tokenizador(contenido)
     try:
