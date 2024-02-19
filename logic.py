@@ -602,7 +602,7 @@ def parse_condition(instruccion, parametros):
         if instruccion[2] in [":north", ":south", ":east", ":west"]:
             return True
     
-    elif instruccion[1] == "iszero?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")":
+    elif instruccion[1] == "iszero?" and len(instruccion) == 4 and instruccion[1] and instruccion[0] == "(" and instruccion[-1] == ")" :
         if instruccion[2].isdigit() or instruccion[2]in tabla_simbolos.keys() or instruccion[2]in parametros:
             return True
     
@@ -613,8 +613,7 @@ def parse_condition(instruccion, parametros):
         return parse_condition(instruccion, parametros)
         
     
-    else:
-        raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
+    raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
     return False
 
 

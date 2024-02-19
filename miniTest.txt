@@ -1,5 +1,8 @@
 (
-(defvar one 1)
-(if (not (blocked?)) ((move one)(move-face 4 :north)) (null))
+(if (not (blocked?)) (move 1) (nulla))
+(if (not (blocked?)) (move 1) (nulla))
+(turn :left)
+(turn :left)
+(turn :left)
 (turn :left)
 )
