@@ -613,8 +613,7 @@ def parse_condition(instruccion, parametros):
         return parse_condition(instruccion, parametros)
         
     
-    else:
-        raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
+    raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
     return False
 
 

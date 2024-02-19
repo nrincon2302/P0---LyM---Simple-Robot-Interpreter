@@ -1,13 +1,4 @@
-(
-if (not (blocked?)) 
-(
-(
-(move 1)
-(move-face 4 :north)
-) )
-
-(
-loop (can-put? :chips 2) 
-(turn :left)
-)
+(defun fill (a)
+  (repeat a (if (not (isZero? aaaaa)) (put :chips 1))
+  )
 )
