@@ -1,0 +1,2 @@
+(loop (not (isZero? myChips)) ((if (not (((isZero? myChips)))) (put :chips 1)))
+  )

@@ -1,5 +1,3 @@
-import copy
-
 # ============================================================
 # PALABRAS RESERVADAS
 # ============================================================
@@ -575,11 +573,12 @@ def parse_funciones(instruccion, principal):
         raise Exception(f"La instrucción {' '.join(instruccion)} no tiene la forma esperada")
     # No tendría por qué llegar hasta acá, pero así se evitan inconsistencias
     return False
+
+
 # ---------------------------------------------------------------------
 # Eliminar parentesis exteriores para el parse condirion
 # ---------------------------------------------------------------------
 def eliminar_parentesis_extra(lista):
-    pila = []
     contar=0
     for caracter in lista:
         if caracter == "(":
@@ -590,6 +589,8 @@ def eliminar_parentesis_extra(lista):
         return lista[contar-1:-contar+1]
     else:
         return lista
+    
+    
 # ---------------------------------------------------------------------
 # Parser de condicionales
 # ---------------------------------------------------------------------
@@ -647,7 +648,6 @@ def contar_parentesis(tokens):
 # ---------------------------------------------------------------------
 def separar_bloque(bloque, principal):
     # Importa que haya una palabra reservada precedida de un (
-    posicion = bloque.index(principal)
     indice = 0
     individuales = []
     principales = []
@@ -663,8 +663,6 @@ def separar_bloque(bloque, principal):
             comando.append(bloque.pop(indice))
             # Agregar el comando cerrado a la lista de instrucciones separadas
             individuales.append(comando)
-        # Manejo en caso que el bloque inicie con una estructura de control
-
         else:
             bloque.pop(indice)
         
