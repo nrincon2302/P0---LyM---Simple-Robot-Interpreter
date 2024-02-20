@@ -39,5 +39,3 @@
 (turn :left)
 )
 )
-
-hola

@@ -12,7 +12,7 @@ def app():
     print("*                                           *")
     print("*********************************************\n")
     
-    nombre_archivo="prueba.txt"
+    nombre_archivo=input("Ingrese el nombre del archivo: ")
     contenido = abrir_archivo(nombre_archivo)
     tokens = tokenizador(contenido)
     try:
@@ -41,7 +41,6 @@ def tokenizador(contenido):
     
     # Tokenizar, incluyendo palabras específicas y paréntesis como tokens individuales
     tokens = re.findall(r'(=|can-put\?|can-pick\?|facing\?|can-move\?|iszero\?|blocked\?|move-dir|move-face|run-dirs|:\w+|\b\w+\b|[(),/*])', contenido)
-
     return tokens
 
 app()
