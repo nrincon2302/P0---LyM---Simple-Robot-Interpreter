@@ -1,3 +1,6 @@
-(loop (not (isZero? myChips)) ()
-
+(defvar atras :around)
+(defun mi_funcion (a b c)
+(defvar ca 2)
+(turn atras)
+(run-dirs a b b b c a)
 )

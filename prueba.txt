@@ -13,6 +13,7 @@
   (move rotate)
 )
 (foo 1 3)
+()
 (
 (defun goend ()
   (if (not (blocked?))
@@ -21,6 +22,7 @@
       (null)
   )
 )
+()
 (put :chips 6)
 )
 (defun fill ()
@@ -33,7 +35,7 @@
 (
 (move 3)
 (
-(run-dirs :left :up :left :down :right)
+(run-dirs  :front :left)
 (turn :left)
 )
 )

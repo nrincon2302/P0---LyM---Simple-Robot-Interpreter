@@ -77,7 +77,8 @@ def parse(lexer_result, esParteDeFuncion):
             principal = tokens.pop(0)
             fragmento_logico.append(principal)
             principales.append(principal)
-            
+            if principal==")":
+                parentesis_abiertos = 0
             # Recorrer la instrucción mientras que no se cierre del todo
             while parentesis_abiertos > 0:
                 token = tokens.pop(0)
@@ -135,6 +136,8 @@ def parse(lexer_result, esParteDeFuncion):
             # CASO 5: El principal no corresponde a ninguna instrucción
             # ============================================================
             # Se lanza una excepción y se detiene la ejecución en este punto
+            elif principal==")":
+                correctamente.append(True)
             else:
                 raise Exception(f"{fragmento_logico} no se reconoce este tipo de instrucción")  
         
@@ -157,6 +160,9 @@ def parse(lexer_result, esParteDeFuncion):
             # ============================================================
             elif principal in ["if", "loop", "repeat"]:
                 intermedio.append(parse_control(fragmento_logico, principal))
+            
+            elif principal==")":
+                correctamente.append(True)
                 
             else:
                 raise Exception("La instrucción " + ' '.join(fragmento_logico) + " no tiene la forma esperada.")
@@ -297,9 +303,14 @@ def parse_comando(instruccion, principal):
             if len(direcciones) == 0:
                 return False
             # Verificamos que todas las orientaciones sean válidas
-            if (dir in [":front", ":right", ":left", ":back"] for dir in direcciones
-                or tabla_simbolos[dir] in [":front", ":right", ":left", ":back", "Temporal"] for dir in direcciones):
-                return True
+
+            for direccion in direcciones:
+                if direccion not in [":front", ":right", ":left", ":back"]:
+                        if tabla_simbolos.get(direccion) not in [":front", ":right", ":left", ":back", "Temporal"]:
+                            raise Exception("La instrucción " + ' '.join(instruccion) + " no tiene la forma esperada para un Comando.")
+            return True
+
+
         
         # move-face n O, donde n es un número y O es una dirección
         elif principal == "move-face":
