@@ -1,0 +1,38 @@
+(move 3)
+(myFunction 4)
+
+(if (facing? :north)
+    (move 2)
+  (turn :right
+
+(jump 5)
+
+(defun myFunction () (move 1))
+myFunction()
+
+(defun myFunction (param1, param2) (move 1))
+
+
+(if (canMove? :north)
+    (move 2)
+    (turn :left))
+
+(if (facing? :north)
+    (move 2)
+  (turn :right))
+(move 1)
+
+(loop (not (blocked?))
+    (move 1)
+
+(loop (not (blocked?)) (move 1) (turn :left))
+
+(if (myFunction)
+    (move 2)
+    (turn :right))
+
+[
+(defvar myVar 0)
+(= myVar * 5)
+
+(= myVar :dim)
