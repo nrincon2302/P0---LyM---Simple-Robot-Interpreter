@@ -12,7 +12,7 @@ def app():
     print("*                                           *")
     print("*********************************************\n")
     
-    nombre_archivo="miniTest.txt"
+    nombre_archivo="prueba.txt"
     contenido = abrir_archivo(nombre_archivo)
     tokens = tokenizador(contenido)
     try:
@@ -40,7 +40,8 @@ def tokenizador(contenido):
     contenido = contenido.lower()
     
     # Tokenizar, incluyendo palabras específicas y paréntesis como tokens individuales
-    tokens = re.findall(r'(=|can-put\?|can-pick\?|facing\?|can-move\?|iszero\?|blocked\?|move-dir|move-face|run-dirs|:\w+|\b\w+\b|[()])', contenido)
+    tokens = re.findall(r'(=|can-put\?|can-pick\?|facing\?|can-move\?|iszero\?|blocked\?|move-dir|move-face|run-dirs|:\w+|\b\w+\b|[(),/*])', contenido)
+
     return tokens
 
 app()

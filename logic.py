@@ -103,6 +103,8 @@ def parse(lexer_result, esParteDeFuncion):
                     principales.append(reservada)
             else:
                 instrucciones.append(fragmento_logico)
+        else: 
+            raise Exception(f"{fragmento_logico} no se reconoce este tipo de instrucción")  
         
     for k in range(len(instrucciones)):
         principal = principales[k]
